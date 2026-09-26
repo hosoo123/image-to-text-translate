@@ -1,8 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
+import { generateJsonWithFallback } from "@/lib/ai-providers";
 
 type AnalyzeText = {
   id: string;
@@ -22,16 +18,14 @@ export async function POST(request: Request) {
 
     const texts = body.texts as AnalyzeText[];
     const sceneContext =
-      typeof body.sceneContext === "string"
-        ? body.sceneContext
-        : "";
+      typeof body.sceneContext === "string" ? body.sceneContext : "";
 
     if (!Array.isArray(texts) || texts.length === 0) {
       return Response.json(
         {
           error: "Орчуулах текст олдсонгүй.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -67,12 +61,7 @@ ${item.confidence ?? "unknown"}
       })
       .join("\n--------------------\n");
 
-    const interaction = await ai.interactions.create({
-      model: "gemini-3.8-flash",
-      input: [
-        {
-          type: "text",
-          text: `
+    const prompt = `
 Чи Монгол хэл дээрх манхва, манга, вебтунгийн
 мэргэжлийн орчуулагч.
 
@@ -315,6 +304,29 @@ relationship-ийг ашиглана.
 
 Гэхдээ шинэ үйл явдал, шинэ мэдээлэл зохиож болохгүй.
 
+--------------------------------------------------
+
+13. БАЙГАЛИЙН МОНГОЛ ХЭЛЛЭГ
+
+Орчуулгыг үг тус бүрээр нь бус, Монгол хэлний бүрэн,
+эвтэйхэн өгүүлбэрээр буцаа. English-ийн бүтцийг шууд
+хуулж тасархай эсвэл хэт нуршуу өгүүлбэр бүү үүсгэ.
+
+"HE'S NOT LIKE US COMMONERS."
+
+Байгалийн:
+"Тэр бидэн шиг жирийн хүн биш."
+
+"AS YOU CAN SEE, HE'S A NOBLE."
+
+Байгалийн:
+"Харж байгаа биз дээ, тэр язгууртан."
+
+Scene-д хүмүүс нууцаар ярьж байгаа SFX "WHISPER WHISPER"
+байвал тайлбар нэмж уртасгалгүй:
+"Шивнэлдэнэ."
+гэж Монгол хэлээр товч, ойлгомжтой орчуул.
+
 ==================================================
 CONSISTENCY
 ==================================================
@@ -394,38 +406,27 @@ TEXTS
 ==================================================
 
 ${inputText}
-          `,
-        },
-      ],
+          `;
+    const { provider, result } = await generateJsonWithFallback({
+      prompt,
+      validate: (value) => {
+        if (typeof value !== "object" || value === null) {
+          throw new Error("AI хариу JSON object биш байна.");
+        }
+
+        const output = value as { translations?: unknown };
+
+        if (!Array.isArray(output.translations)) {
+          throw new Error("AI хариунд translations жагсаалт алга байна.");
+        }
+
+        return { translations: output.translations };
+      },
     });
 
-    const output = interaction.output_text || "";
-
-    let result;
-
-    try {
-      const cleanedOutput = output
-        .replace(/```json/g, "")
-        .replace(/```/g, "")
-        .trim();
-
-      result = JSON.parse(cleanedOutput);
-    } catch {
-      console.error(
-        "Gemini returned invalid JSON:",
-        output
-      );
-
-      return Response.json(
-        {
-          error: "AI зөв JSON буцаасангүй.",
-          raw: output,
-        },
-        { status: 500 }
-      );
-    }
-
-    return Response.json(result);
+    return Response.json(result, {
+      headers: { "X-AI-Provider": provider },
+    });
   } catch (error) {
     console.error("Gemini translate error:", error);
 
@@ -436,7 +437,7 @@ ${inputText}
             ? error.message
             : "Орчуулгын үед алдаа гарлаа.",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

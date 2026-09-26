@@ -1,8 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
+import { generateJsonWithFallback } from "@/lib/ai-providers";
 
 export async function POST(request: Request) {
   try {
@@ -10,10 +6,7 @@ export async function POST(request: Request) {
     const image = data.get("image");
 
     if (!(image instanceof File)) {
-      return Response.json(
-        { error: "Зураг олдсонгүй." },
-        { status: 400 }
-      );
+      return Response.json({ error: "Зураг олдсонгүй." }, { status: 400 });
     }
 
     const arrayBuffer = await image.arrayBuffer();
@@ -22,12 +15,7 @@ export async function POST(request: Request) {
     const base64Image = buffer.toString("base64");
     const mimeType = image.type || "image/jpeg";
 
-    const interaction = await ai.interactions.create({
-      model: "gemini-3.8-flash",
-      input: [
-        {
-          type: "text",
-          text: `
+    const prompt = `
 Чи манхва, манга, вебтунгийн зураг анализ хийдэг AI.
 
 Энэ зураг дээрх бүх текстийг илрүүлээд,
@@ -60,16 +48,26 @@ export async function POST(request: Request) {
 2. COORDINATES
 ==================================================
 
-Бүх текстийн bounding box-ийг ол.
+Текст болон түүнийг агуулж байгаа dialogue/thought bubble-ийн координатыг
+тус тусад нь ол.
 
-Координат нь эх зургийн pixel хэмжээгээр байна.
+Бүх координат эх зургийн pixel хэмжээгээр байна.
 
 x = зүүн координат
 y = дээд координат
 width = өргөн
 height = өндөр
 
-Bounding box нь тухайн текстийг бүрэн хамарсан байна.
+Text bounding box нь зөвхөн тухайн текстийг бүрэн хамарна.
+
+bubbleX = bubble-ийн дотор талын зүүн координат
+bubbleY = bubble-ийн дотор талын дээд координат
+bubbleWidth = bubble-ийн дотор талын өргөн
+bubbleHeight = bubble-ийн дотор талын өндөр
+
+Bubble-ийн координат нь text-ээс тусдаа байх ёстой бөгөөд bubble-ийн бүх
+текст багтах дотор хэсгийг хамарна. Speech tail болон хүрээний зураасыг
+оруулахгүй. Thought bubble бол ellipse-ийн дотор хэсгийг хамар.
 
 ==================================================
 3. CHARACTER
@@ -220,6 +218,10 @@ JSON FORMAT
       "y": 240,
       "width": 300,
       "height": 100,
+      "bubbleX": 80,
+      "bubbleY": 200,
+      "bubbleWidth": 380,
+      "bubbleHeight": 180,
       "character": "Kai",
       "personality": [
         "quiet",
@@ -245,46 +247,40 @@ JSON FORMAT
 - JSON-оос өөр ямар ч текст бүү буцаа.
 - ID-г дарааллаар өг.
 - Text бүрийг тусдаа object болго.
+- Dialogue болон thought бүрт bubbleX, bubbleY, bubbleWidth, bubbleHeight буцаа.
+- x, y, width, height-ийг bubble-ийн координаттай андуурч болохгүй.
 - Мэдэхгүй зүйлээ зохиож болохгүй.
 - Character нэрийг зурагнаас мэдэх боломжгүй бол "unknown".
 - Relationship мэдэгдэхгүй бол "unknown".
 - Emotion мэдэгдэхгүй бол "neutral".
 - Personality мэдэгдэхгүй бол [].
 - Speech style мэдэгдэхгүй бол "unknown".
-          `,
-        },
-        {
-          type: "image",
-          data: base64Image,
-          mime_type: mimeType,
-        },
-      ],
+          `;
+    const { provider, result } = await generateJsonWithFallback({
+      prompt,
+      image: { base64: base64Image, mimeType },
+      validate: (value) => {
+        if (typeof value !== "object" || value === null) {
+          throw new Error("AI хариу JSON object биш байна.");
+        }
+
+        const output = value as { sceneContext?: unknown; texts?: unknown };
+
+        if (!Array.isArray(output.texts)) {
+          throw new Error("AI хариунд texts жагсаалт алга байна.");
+        }
+
+        return {
+          sceneContext:
+            typeof output.sceneContext === "string" ? output.sceneContext : "",
+          texts: output.texts,
+        };
+      },
     });
 
-    const output = interaction.output_text || "";
-
-    let result;
-
-    try {
-      const cleanedOutput = output
-        .replace(/```json/g, "")
-        .replace(/```/g, "")
-        .trim();
-
-      result = JSON.parse(cleanedOutput);
-    } catch {
-      console.error("Gemini returned invalid JSON:", output);
-
-      return Response.json(
-        {
-          error: "AI зөв JSON буцаасангүй.",
-          raw: output,
-        },
-        { status: 500 }
-      );
-    }
-
-    return Response.json(result);
+    return Response.json(result, {
+      headers: { "X-AI-Provider": provider },
+    });
   } catch (error) {
     console.error("Gemini analyze error:", error);
 
@@ -295,7 +291,7 @@ JSON FORMAT
             ? error.message
             : "Зураг анализ хийх үед алдаа гарлаа.",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -18,6 +18,28 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## AI Providers
+
+The API routes use the providers in `AI_PROVIDERS` order. If a provider is unavailable, rate-limited, or returns invalid JSON, the next configured provider is tried.
+
+Add the needed variables from `.env.example` to `.env.local`; do not overwrite existing keys. The default chain is:
+
+```env
+AI_PROVIDERS=gemini,groq,openrouter
+```
+
+Set the corresponding server-side keys: `GEMINI_API_KEY`, `GROQ_API_KEY`, and `OPENROUTER_API_KEY`. The OpenRouter free-model quota and provider availability can change.
+
+To add local Ollama as a fallback, install and pull a vision model such as `qwen3-vl:8b`, start Ollama, then use:
+
+```env
+AI_PROVIDERS=gemini,groq,openrouter,ollama
+OLLAMA_BASE_URL=http://localhost:11434/v1/
+OLLAMA_MODEL=qwen3-vl:8b
+```
+
+OpenAI is supported as an optional, normally paid provider by adding `openai` to `AI_PROVIDERS` and setting `OPENAI_API_KEY`.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
