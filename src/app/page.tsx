@@ -1022,7 +1022,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen text-white">
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-6 sm:px-8 sm:py-10">
+      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-5 sm:px-8 sm:py-10">
         <header className="mb-8 flex flex-col gap-6 border-b border-white/10 pb-7 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="mb-4 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.22em] text-lime-300">
@@ -1047,7 +1047,7 @@ export default function Home() {
           </div>
         </header>
 
-        <div className="mb-7 grid grid-cols-3 gap-2 sm:max-w-xl">
+        <div className="mb-7 grid grid-cols-3 gap-1 sm:max-w-xl sm:gap-2">
           {["Upload", "Understand", "Export"].map((step, index) => {
             const complete =
               index === 0
@@ -1058,7 +1058,7 @@ export default function Home() {
             return (
               <div
                 key={step}
-                className="flex items-center gap-2 text-xs text-zinc-500"
+                className="flex items-center gap-1 text-[11px] text-zinc-500 sm:gap-2 sm:text-xs"
               >
                 <span
                   className={`flex h-7 w-7 items-center justify-center rounded-full border text-[11px] font-bold ${complete ? "border-lime-300 bg-lime-300 text-black" : "border-white/15 bg-white/[0.04]"}`}
@@ -1077,13 +1077,13 @@ export default function Home() {
           {!image ? (
             <label
               htmlFor="image-upload"
-              className="group relative flex min-h-[380px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-dashed border-white/15 bg-white/[0.045] p-8 text-center shadow-2xl shadow-black/20 transition hover:border-lime-300/60 hover:bg-white/[0.07]"
+              className="group relative flex min-h-[320px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-dashed border-white/15 bg-white/[0.045] p-6 text-center shadow-2xl shadow-black/20 transition hover:border-lime-300/60 hover:bg-white/[0.07] sm:min-h-[380px] sm:p-8"
             >
               <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl border border-lime-300/30 bg-lime-300/10 text-4xl transition group-hover:scale-105">
                 ✦
               </div>
 
-              <h2 className="text-2xl font-bold tracking-tight">
+              <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
                 Зургаа энд оруул
               </h2>
 
@@ -1096,7 +1096,7 @@ export default function Home() {
               </span>
             </label>
           ) : (
-            <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-black/25 p-3 shadow-2xl shadow-black/30 sm:p-5">
+            <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/25 p-2 shadow-2xl shadow-black/30 sm:rounded-[2rem] sm:p-5">
               <canvas
                 ref={canvasRef}
                 onPointerDown={handleBubblePointerDown}
@@ -1104,7 +1104,7 @@ export default function Home() {
                 onPointerUp={handleBubblePointerUp}
                 onPointerCancel={handleBubblePointerUp}
                 title="Ногоон bubble хүрээг чирж байрлуулж, буланг чирж хэмжээг нь өөрчилнө"
-                className="mx-auto max-h-[760px] max-w-full touch-none rounded-2xl object-contain"
+                className="mx-auto max-h-[76svh] max-w-full touch-none rounded-xl object-contain sm:max-h-[760px] sm:rounded-2xl"
               />
             </div>
           )}
@@ -1155,7 +1155,7 @@ export default function Home() {
           {/* SCENE CONTEXT */}
 
           {sceneContext && (
-            <div className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6">
+            <div className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-4 sm:p-6">
               <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-lime-300">
                 Scene note
               </p>
@@ -1197,7 +1197,7 @@ export default function Home() {
                   return (
                     <div
                       key={original.id}
-                      className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-5 shadow-xl shadow-black/10 transition hover:border-white/20"
+                      className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-4 shadow-xl shadow-black/10 transition hover:border-white/20 sm:p-5"
                     >
                       <div className="mb-4 flex items-center justify-between">
                         <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-bold text-lime-200">
@@ -1217,7 +1217,7 @@ export default function Home() {
                         <div className="mb-5 grid gap-2 sm:grid-cols-2">
                           {original.character &&
                             original.character !== "unknown" && (
-                              <div className="rounded-lg bg-zinc-950 px-3 py-2">
+                              <div className="break-words rounded-lg bg-zinc-950 px-3 py-2">
                                 <span className="text-xs text-zinc-600">
                                   Дүр
                                 </span>
@@ -1229,7 +1229,7 @@ export default function Home() {
                             )}
 
                           {original.emotion && (
-                            <div className="rounded-lg bg-zinc-950 px-3 py-2">
+                            <div className="break-words rounded-lg bg-zinc-950 px-3 py-2">
                               <span className="text-xs text-zinc-600">
                                 Сэтгэл хөдлөл
                               </span>
@@ -1242,7 +1242,7 @@ export default function Home() {
 
                           {original.relationship &&
                             original.relationship !== "unknown" && (
-                              <div className="rounded-lg bg-zinc-950 px-3 py-2">
+                              <div className="break-words rounded-lg bg-zinc-950 px-3 py-2">
                                 <span className="text-xs text-zinc-600">
                                   Харилцаа
                                 </span>
@@ -1255,7 +1255,7 @@ export default function Home() {
 
                           {original.speechStyle &&
                             original.speechStyle !== "unknown" && (
-                              <div className="rounded-lg bg-zinc-950 px-3 py-2">
+                              <div className="break-words rounded-lg bg-zinc-950 px-3 py-2">
                                 <span className="text-xs text-zinc-600">
                                   Ярианы хэв маяг
                                 </span>
@@ -1296,7 +1296,7 @@ export default function Home() {
                         Эх текст
                       </p>
 
-                      <div className="rounded-2xl border border-white/5 bg-black/25 p-4 text-sm leading-7 text-zinc-300">
+                      <div className="break-words rounded-2xl border border-white/5 bg-black/25 p-4 text-sm leading-7 text-zinc-300">
                         {original.originalText}
                       </div>
 
@@ -1312,7 +1312,7 @@ export default function Home() {
                           updateTranslation(original.id, event.target.value)
                         }
                         rows={3}
-                        className="w-full resize-y rounded-2xl border border-white/15 bg-black/30 p-4 text-lg leading-8 text-white outline-none transition placeholder:text-zinc-600 focus:border-lime-300/70 focus:ring-4 focus:ring-lime-300/10"
+                        className="w-full resize-y rounded-2xl border border-white/15 bg-black/30 p-3 text-base leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-lime-300/70 focus:ring-4 focus:ring-lime-300/10 sm:p-4 sm:text-lg sm:leading-8"
                         placeholder="Монгол орчуулга..."
                       />
                     </div>
