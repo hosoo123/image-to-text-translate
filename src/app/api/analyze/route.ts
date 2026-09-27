@@ -69,6 +69,24 @@ Bubble-ийн координат нь text-ээс тусдаа байх ёсто
 текст багтах дотор хэсгийг хамарна. Speech tail болон хүрээний зураасыг
 оруулахгүй. Thought bubble бол ellipse-ийн дотор хэсгийг хамар.
 
+Bubble-ийн дүрсийг bubbleShape талбарт яг нэгээр сонго:
+- rounded: булан нь дугуй speech bubble
+- ellipse: бодлын/зууван bubble
+- rectangle: narration эсвэл дөрвөлжин panel
+- none: текстийг хүрээлсэн bubble/panel байхгүй, зураг дээр шууд байрласан
+
+Дэвсгэрийг bubbleBackground талбарт яг нэгээр сонго:
+- solid: bubble-ийн дотор тал нэгэн жигд өнгөтэй
+- transparent: хүрээтэй ч дотор нь зургийн scene харагддаг
+- none: bubble/panel байхгүй
+
+Хүрээ ба background байхгүй SFX/dialogue/narration дээр bubbleShape="none",
+bubbleBackground="none" гэж өгөөд bubbleX/Y/Width/Height-ийг text box-той
+ижил болго. Зөвхөн харагдаж байгаа хүрээтэй bubble/panel-ийг хэмж; таамгаар
+том дөрвөлжин bubble зохиож болохгүй.
+
+bubbleConfidence = bubble-ийн дүрс/хүрээний координатад итгэх итгэл (0.0-1.0).
+
 ==================================================
 3. CHARACTER
 ==================================================
@@ -222,6 +240,9 @@ JSON FORMAT
       "bubbleY": 200,
       "bubbleWidth": 380,
       "bubbleHeight": 180,
+      "bubbleShape": "rounded",
+      "bubbleBackground": "solid",
+      "bubbleConfidence": 0.92,
       "character": "Kai",
       "personality": [
         "quiet",
@@ -248,6 +269,8 @@ JSON FORMAT
 - ID-г дарааллаар өг.
 - Text бүрийг тусдаа object болго.
 - Dialogue болон thought бүрт bubbleX, bubbleY, bubbleWidth, bubbleHeight буцаа.
+- Text бүрт bubbleShape, bubbleBackground, bubbleConfidence буцаа.
+- Bubble байхгүй text дээр bubbleShape болон bubbleBackground-ийг "none" болго.
 - x, y, width, height-ийг bubble-ийн координаттай андуурч болохгүй.
 - Мэдэхгүй зүйлээ зохиож болохгүй.
 - Character нэрийг зурагнаас мэдэх боломжгүй бол "unknown".

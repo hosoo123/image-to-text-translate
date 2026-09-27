@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type AnalysisText = {
   id: string;
@@ -14,6 +14,9 @@ type AnalysisText = {
   bubbleY?: number;
   bubbleWidth?: number;
   bubbleHeight?: number;
+  bubbleShape?: "rounded" | "ellipse" | "rectangle" | "none";
+  bubbleBackground?: "solid" | "transparent" | "none";
+  bubbleConfidence?: number;
 
   character?: string;
   personality?: string[];
@@ -34,6 +37,8 @@ type BubbleBounds = {
   width: number;
   height: number;
 };
+
+type BubbleShape = NonNullable<AnalysisText["bubbleShape"]>;
 
 type BubbleDrag = {
   id: string;
@@ -59,92 +64,124 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [rendering, setRendering] = useState(false);
   const [error, setError] = useState("");
+  const [activeProvider, setActiveProvider] = useState("");
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const previewImageRef = useRef<HTMLImageElement | null>(null);
   const bubbleDragRef = useRef<BubbleDrag | null>(null);
 
-  function getBubbleBounds(
-    item: AnalysisText,
-    imageWidth: number,
-    imageHeight: number,
-  ): BubbleBounds {
-    const hasBubbleBounds =
-      Number.isFinite(item.bubbleX) &&
-      Number.isFinite(item.bubbleY) &&
-      Number.isFinite(item.bubbleWidth) &&
-      Number.isFinite(item.bubbleHeight) &&
-      (item.bubbleWidth ?? 0) > 0 &&
-      (item.bubbleHeight ?? 0) > 0;
-    const fallbackPaddingX = Math.max(12, item.width * 0.55);
-    const fallbackPaddingY = Math.max(12, item.height * 0.55);
-    const rawX = hasBubbleBounds ? item.bubbleX! : item.x - fallbackPaddingX;
-    const rawY = hasBubbleBounds ? item.bubbleY! : item.y - fallbackPaddingY;
-    const rawWidth = hasBubbleBounds
-      ? item.bubbleWidth!
-      : item.width + fallbackPaddingX * 2;
-    const rawHeight = hasBubbleBounds
-      ? item.bubbleHeight!
-      : item.height + fallbackPaddingY * 2;
-    const x = Math.max(0, Math.min(imageWidth - 1, rawX));
-    const y = Math.max(0, Math.min(imageHeight - 1, rawY));
+  const getBubbleShape = useCallback((item: AnalysisText): BubbleShape => {
+    if (item.bubbleShape) return item.bubbleShape;
+    if (item.type.toLowerCase() === "thought") return "ellipse";
+    if (item.type.toLowerCase() === "narration") return "rectangle";
+    return "rounded";
+  }, []);
 
-    return {
-      x,
-      y,
-      width: Math.max(1, Math.min(imageWidth - x, rawWidth)),
-      height: Math.max(1, Math.min(imageHeight - y, rawHeight)),
-    };
-  }
+  const getBubbleBounds = useCallback(
+    (
+      item: AnalysisText,
+      imageWidth: number,
+      imageHeight: number,
+    ): BubbleBounds => {
+      const isBackgroundless = getBubbleShape(item) === "none";
+      const hasBubbleBounds =
+        Number.isFinite(item.bubbleX) &&
+        Number.isFinite(item.bubbleY) &&
+        Number.isFinite(item.bubbleWidth) &&
+        Number.isFinite(item.bubbleHeight) &&
+        (item.bubbleWidth ?? 0) > 0 &&
+        (item.bubbleHeight ?? 0) > 0;
+      const fallbackPaddingX = Math.max(12, item.width * 0.55);
+      const fallbackPaddingY = Math.max(12, item.height * 0.55);
+      const rawX = hasBubbleBounds
+        ? item.bubbleX!
+        : isBackgroundless
+          ? item.x
+          : item.x - fallbackPaddingX;
+      const rawY = hasBubbleBounds
+        ? item.bubbleY!
+        : isBackgroundless
+          ? item.y
+          : item.y - fallbackPaddingY;
+      const rawWidth = hasBubbleBounds
+        ? item.bubbleWidth!
+        : isBackgroundless
+          ? item.width
+          : item.width + fallbackPaddingX * 2;
+      const rawHeight = hasBubbleBounds
+        ? item.bubbleHeight!
+        : isBackgroundless
+          ? item.height
+          : item.height + fallbackPaddingY * 2;
+      const x = Math.max(0, Math.min(imageWidth - 1, rawX));
+      const y = Math.max(0, Math.min(imageHeight - 1, rawY));
 
-  function traceBubbleShape(
-    ctx: CanvasRenderingContext2D,
-    bounds: BubbleBounds,
-    isThought: boolean,
-  ) {
-    ctx.beginPath();
+      return {
+        x,
+        y,
+        width: Math.max(1, Math.min(imageWidth - x, rawWidth)),
+        height: Math.max(1, Math.min(imageHeight - y, rawHeight)),
+      };
+    },
+    [getBubbleShape],
+  );
 
-    if (isThought) {
-      ctx.ellipse(
-        bounds.x + bounds.width / 2,
-        bounds.y + bounds.height / 2,
-        bounds.width / 2,
-        bounds.height / 2,
-        0,
-        0,
-        Math.PI * 2,
+  const traceBubbleShape = useCallback(
+    (
+      ctx: CanvasRenderingContext2D,
+      bounds: BubbleBounds,
+      shape: BubbleShape,
+    ) => {
+      ctx.beginPath();
+
+      if (shape === "ellipse") {
+        ctx.ellipse(
+          bounds.x + bounds.width / 2,
+          bounds.y + bounds.height / 2,
+          bounds.width / 2,
+          bounds.height / 2,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        return;
+      }
+
+      if (shape === "rectangle" || shape === "none") {
+        ctx.rect(bounds.x, bounds.y, bounds.width, bounds.height);
+        return;
+      }
+
+      const radius = Math.min(bounds.width, bounds.height) * 0.16;
+
+      ctx.moveTo(bounds.x + radius, bounds.y);
+      ctx.lineTo(bounds.x + bounds.width - radius, bounds.y);
+      ctx.quadraticCurveTo(
+        bounds.x + bounds.width,
+        bounds.y,
+        bounds.x + bounds.width,
+        bounds.y + radius,
       );
-      return;
-    }
-
-    const radius = Math.min(bounds.width, bounds.height) * 0.16;
-
-    ctx.moveTo(bounds.x + radius, bounds.y);
-    ctx.lineTo(bounds.x + bounds.width - radius, bounds.y);
-    ctx.quadraticCurveTo(
-      bounds.x + bounds.width,
-      bounds.y,
-      bounds.x + bounds.width,
-      bounds.y + radius,
-    );
-    ctx.lineTo(bounds.x + bounds.width, bounds.y + bounds.height - radius);
-    ctx.quadraticCurveTo(
-      bounds.x + bounds.width,
-      bounds.y + bounds.height,
-      bounds.x + bounds.width - radius,
-      bounds.y + bounds.height,
-    );
-    ctx.lineTo(bounds.x + radius, bounds.y + bounds.height);
-    ctx.quadraticCurveTo(
-      bounds.x,
-      bounds.y + bounds.height,
-      bounds.x,
-      bounds.y + bounds.height - radius,
-    );
-    ctx.lineTo(bounds.x, bounds.y + radius);
-    ctx.quadraticCurveTo(bounds.x, bounds.y, bounds.x + radius, bounds.y);
-    ctx.closePath();
-  }
+      ctx.lineTo(bounds.x + bounds.width, bounds.y + bounds.height - radius);
+      ctx.quadraticCurveTo(
+        bounds.x + bounds.width,
+        bounds.y + bounds.height,
+        bounds.x + bounds.width - radius,
+        bounds.y + bounds.height,
+      );
+      ctx.lineTo(bounds.x + radius, bounds.y + bounds.height);
+      ctx.quadraticCurveTo(
+        bounds.x,
+        bounds.y + bounds.height,
+        bounds.x,
+        bounds.y + bounds.height - radius,
+      );
+      ctx.lineTo(bounds.x, bounds.y + radius);
+      ctx.quadraticCurveTo(bounds.x, bounds.y, bounds.x + radius, bounds.y);
+      ctx.closePath();
+    },
+    [],
+  );
 
   /*
    * OCR box-уудыг зураг дээр харуулах
@@ -166,30 +203,31 @@ export default function Home() {
       ctx.drawImage(img, 0, 0);
 
       analysisTexts.forEach((item) => {
-        if (item.type !== "sfx" && item.type !== "narration") {
-          const bounds = getBubbleBounds(item, canvas.width, canvas.height);
-          const isThought = item.type.toLowerCase() === "thought";
-          const handleSize = Math.max(12, Math.round(img.naturalWidth / 100));
+        const bounds = getBubbleBounds(item, canvas.width, canvas.height);
+        const shape = getBubbleShape(item);
+        const handleSize = Math.max(12, Math.round(img.naturalWidth / 100));
 
-          ctx.save();
-          ctx.strokeStyle = "#22c55e";
-          ctx.lineWidth = Math.max(2, Math.round(img.naturalWidth / 500));
-          ctx.setLineDash([
-            Math.max(6, handleSize / 2),
-            Math.max(4, handleSize / 3),
-          ]);
-          traceBubbleShape(ctx, bounds, isThought);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.fillStyle = "#22c55e";
-          ctx.fillRect(
-            bounds.x + bounds.width - handleSize / 2,
-            bounds.y + bounds.height - handleSize / 2,
-            handleSize,
-            handleSize,
-          );
-          ctx.restore();
-        }
+        ctx.save();
+        ctx.strokeStyle =
+          item.bubbleConfidence !== undefined && item.bubbleConfidence < 0.55
+            ? "#f59e0b"
+            : "#22c55e";
+        ctx.lineWidth = Math.max(2, Math.round(img.naturalWidth / 500));
+        ctx.setLineDash([
+          Math.max(6, handleSize / 2),
+          Math.max(4, handleSize / 3),
+        ]);
+        traceBubbleShape(ctx, bounds, shape);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.fillRect(
+          bounds.x + bounds.width - handleSize / 2,
+          bounds.y + bounds.height - handleSize / 2,
+          handleSize,
+          handleSize,
+        );
+        ctx.restore();
 
         ctx.strokeStyle = "#ef4444";
         ctx.lineWidth = Math.max(2, Math.round(img.naturalWidth / 600));
@@ -215,7 +253,7 @@ export default function Home() {
       if (previewImageRef.current === img) drawPreview(img);
     };
     img.src = image;
-  }, [image, analysisTexts]);
+  }, [image, analysisTexts, getBubbleBounds, getBubbleShape, traceBubbleShape]);
 
   /*
    * Зураг сонгох
@@ -224,6 +262,16 @@ export default function Home() {
     const selectedFile = event.target.files?.[0];
 
     if (!selectedFile) return;
+
+    if (!selectedFile.type.startsWith("image/")) {
+      setError("Зөвхөн зураг файл сонгоно уу.");
+      return;
+    }
+
+    if (selectedFile.size > 20 * 1024 * 1024) {
+      setError("Зураг 20MB-аас бага хэмжээтэй байх ёстой.");
+      return;
+    }
 
     const imageUrl = URL.createObjectURL(selectedFile);
 
@@ -236,6 +284,7 @@ export default function Home() {
     setOriginalTexts([]);
     setAnalysisTexts([]);
     setSceneContext("");
+    setActiveProvider("");
 
     setError("");
   }
@@ -274,6 +323,8 @@ export default function Home() {
         throw new Error(analyzeData.error || "Зургийг унших үед алдаа гарлаа.");
       }
 
+      setActiveProvider(analyzeResponse.headers.get("X-AI-Provider") || "");
+
       const texts = analyzeData.texts as AnalysisText[];
 
       const detectedSceneContext =
@@ -311,6 +362,8 @@ export default function Home() {
       if (!translateResponse.ok) {
         throw new Error(translateData.error || "Орчуулгын үед алдаа гарлаа.");
       }
+
+      setActiveProvider(translateResponse.headers.get("X-AI-Provider") || "");
 
       setTranslations(translateData.translations || []);
     } catch (error) {
@@ -380,10 +433,6 @@ export default function Home() {
 
     const hitRadius = Math.max(10, point.scale * 10);
     const item = [...analysisTexts].reverse().find((candidate) => {
-      if (candidate.type === "sfx" || candidate.type === "narration") {
-        return false;
-      }
-
       const bounds = getBubbleBounds(candidate, canvas.width, canvas.height);
       const inResizeHandle =
         Math.abs(point.x - (bounds.x + bounds.width)) <= hitRadius &&
@@ -656,6 +705,82 @@ export default function Home() {
     return `rgb(${r}, ${g}, ${b})`;
   }
 
+  function eraseTextRegionWithInterpolation(
+    ctx: CanvasRenderingContext2D,
+    bounds: BubbleBounds,
+  ) {
+    const margin = Math.min(
+      10,
+      Math.max(2, Math.round(Math.min(bounds.width, bounds.height) * 0.12)),
+    );
+    const left = Math.max(0, Math.floor(bounds.x));
+    const top = Math.max(0, Math.floor(bounds.y));
+    const right = Math.min(
+      ctx.canvas.width,
+      Math.ceil(bounds.x + bounds.width),
+    );
+    const bottom = Math.min(
+      ctx.canvas.height,
+      Math.ceil(bounds.y + bounds.height),
+    );
+    const regionLeft = Math.max(0, left - margin);
+    const regionTop = Math.max(0, top - margin);
+    const regionRight = Math.min(ctx.canvas.width, right + margin);
+    const regionBottom = Math.min(ctx.canvas.height, bottom + margin);
+    const region = ctx.getImageData(
+      regionLeft,
+      regionTop,
+      regionRight - regionLeft,
+      regionBottom - regionTop,
+    );
+    const regionWidth = region.width;
+    const pixelAt = (x: number, y: number) => {
+      const index = (y * regionWidth + x) * 4;
+      return [
+        region.data[index],
+        region.data[index + 1],
+        region.data[index + 2],
+        region.data[index + 3],
+      ];
+    };
+
+    for (let y = top; y < bottom; y += 1) {
+      const localY = y - regionTop;
+      const verticalRatio = (y - top + 0.5) / Math.max(1, bottom - top);
+      const leftColor = pixelAt(Math.max(0, left - regionLeft - 1), localY);
+      const rightColor = pixelAt(
+        Math.min(regionWidth - 1, right - regionLeft),
+        localY,
+      );
+
+      for (let x = left; x < right; x += 1) {
+        const localX = x - regionLeft;
+        const horizontalRatio = (x - left + 0.5) / Math.max(1, right - left);
+        const topColor = pixelAt(localX, Math.max(0, top - regionTop - 1));
+        const bottomColor = pixelAt(
+          localX,
+          Math.min(region.height - 1, bottom - regionTop),
+        );
+        const index = (localY * regionWidth + localX) * 4;
+
+        for (let channel = 0; channel < 4; channel += 1) {
+          const horizontal =
+            leftColor[channel] * (1 - horizontalRatio) +
+            rightColor[channel] * horizontalRatio;
+          const vertical =
+            topColor[channel] * (1 - verticalRatio) +
+            bottomColor[channel] * verticalRatio;
+
+          region.data[index + channel] = Math.round(
+            (horizontal + vertical) / 2,
+          );
+        }
+      }
+    }
+
+    ctx.putImageData(region, regionLeft, regionTop);
+  }
+
   /*
    * Background өнгөнөөс
    * хар эсвэл цагаан text сонгоно.
@@ -728,8 +853,6 @@ export default function Home() {
       ctx.drawImage(img, 0, 0);
 
       originalTexts.forEach((item) => {
-        if (item.type === "narration") return;
-
         const translation = translations.find((t) => t.id === item.id);
 
         if (!translation) return;
@@ -740,29 +863,22 @@ export default function Home() {
 
         const isSfx = item.type.toLowerCase() === "sfx";
         const isThought = item.type.toLowerCase() === "thought";
-        const sfxPadding = Math.max(
-          2,
-          Math.round(Math.min(item.width, item.height) * 0.12),
-        );
-        const sfxX = Math.max(0, item.x - sfxPadding);
-        const sfxY = Math.max(0, item.y - sfxPadding);
-        const bubbleBounds = isSfx
-          ? {
-              x: sfxX,
-              y: sfxY,
-              width: Math.min(canvas.width - sfxX, item.width + sfxPadding * 2),
-              height: Math.min(
-                canvas.height - sfxY,
-                item.height + sfxPadding * 2,
-              ),
-            }
-          : getBubbleBounds(item, canvas.width, canvas.height);
+        const shape = getBubbleShape(item);
+        const background = item.bubbleBackground ?? "solid";
+        const hasFill = background === "solid" && shape !== "none";
+        const bubbleBounds = getBubbleBounds(item, canvas.width, canvas.height);
         const {
           x: bubbleX,
           y: bubbleY,
           width: bubbleWidth,
           height: bubbleHeight,
         } = bubbleBounds;
+        const textBounds = {
+          x: item.x,
+          y: item.y,
+          width: item.width,
+          height: item.height,
+        };
 
         /*
          * Bubble-ийн background
@@ -770,81 +886,68 @@ export default function Home() {
          */
         const backgroundColor = detectBackgroundColor(
           ctx,
-          isSfx ? item.x : bubbleX,
-          isSfx ? item.y : bubbleY,
-          isSfx ? item.width : bubbleWidth,
-          isSfx ? item.height : bubbleHeight,
+          hasFill ? bubbleX : item.x,
+          hasFill ? bubbleY : item.y,
+          hasFill ? bubbleWidth : item.width,
+          hasFill ? bubbleHeight : item.height,
           isThought,
-          isSfx,
+          !hasFill,
         );
 
         ctx.fillStyle = backgroundColor;
-        if (isSfx) {
-          ctx.fillRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight);
-        } else {
-          traceBubbleShape(ctx, bubbleBounds, isThought);
+        if (hasFill) {
+          traceBubbleShape(ctx, bubbleBounds, shape);
           ctx.fill();
+        } else {
+          eraseTextRegionWithInterpolation(ctx, textBounds);
         }
 
-        /*
-         * Font size
-         */
+        const textBoundsForLayout =
+          shape === "none" ? textBounds : bubbleBounds;
+        const layoutWidth = textBoundsForLayout.width;
+        const layoutHeight = textBoundsForLayout.height;
         const fontSize = getBestFontSize(
           ctx,
           text,
-          bubbleWidth,
-          bubbleHeight,
+          layoutWidth,
+          layoutHeight,
           isThought,
         );
-
         ctx.font = isSfx
           ? `italic 700 ${fontSize}px Arial`
           : `700 ${fontSize}px Arial`;
 
-        /*
-         * Background-аас text color
-         * автоматаар сонгоно.
-         */
-        ctx.fillStyle = getTextColor(backgroundColor);
-
+        const textColor = getTextColor(backgroundColor);
+        const outlineColor = textColor === "#111111" ? "#ffffff" : "#111111";
+        ctx.fillStyle = textColor;
+        ctx.strokeStyle = outlineColor;
+        ctx.lineWidth = hasFill ? 0 : Math.max(1, fontSize * 0.12);
+        ctx.lineJoin = "round";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        /*
-         * Text wrap
-         */
         const lines = wrapText(
           ctx,
           text,
-          bubbleWidth * (isThought ? 0.68 : 0.8),
+          layoutWidth * (isThought ? 0.68 : 0.84),
         );
-
         const lineHeight = fontSize * 1.25;
-
         const totalHeight = lines.length * lineHeight;
-
-        const centerX = bubbleX + bubbleWidth / 2;
-
-        const centerY = bubbleY + bubbleHeight / 2;
-
+        const centerX = textBoundsForLayout.x + layoutWidth / 2;
+        const centerY = textBoundsForLayout.y + layoutHeight / 2;
         let startY = centerY - totalHeight / 2;
 
-        /*
-         * Монгол текст зурна.
-         */
         ctx.save();
-        if (isSfx) {
-          ctx.beginPath();
-          ctx.rect(bubbleX, bubbleY, bubbleWidth, bubbleHeight);
-          ctx.clip();
-        } else {
-          traceBubbleShape(ctx, bubbleBounds, isThought);
+        if (shape !== "none") {
+          traceBubbleShape(ctx, bubbleBounds, shape);
           ctx.clip();
         }
 
         lines.forEach((line) => {
-          ctx.fillText(line, centerX, startY + lineHeight / 2);
+          const lineY = startY + lineHeight / 2;
 
+          if (!hasFill) ctx.strokeText(line, centerX, lineY);
+          ctx.fillText(line, centerX, lineY);
           startY += lineHeight;
         });
 
@@ -859,9 +962,11 @@ export default function Home() {
       setImage(renderedImage);
 
       /*
-       * OCR box-уудыг нуух
+       * Bubble/text box-уудыг хадгална.
+       * Ингэснээр хэрэглэгч render хийсний дараа
+       * green box-ийг чирж дахин байрлуулж чадна.
        */
-      setAnalysisTexts([]);
+      setAnalysisTexts(originalTexts);
     } catch (error) {
       console.error(error);
 
@@ -907,45 +1012,91 @@ export default function Home() {
     setTranslations([]);
 
     setSceneContext("");
+    setActiveProvider("");
 
     setError("");
   }
 
+  const isAnalyzed = originalTexts.length > 0;
+  const isRendered = image?.startsWith("data:image/") ?? false;
+
   return (
-    <main className="min-h-screen bg-zinc-950 text-white">
-      <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center px-6 py-12">
-        {/* HEADER */}
+    <main className="min-h-screen text-white">
+      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-6 sm:px-8 sm:py-10">
+        <header className="mb-8 flex flex-col gap-6 border-b border-white/10 pb-7 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="mb-4 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.22em] text-lime-300">
+              <span className="h-2 w-2 rounded-full bg-lime-300 shadow-[0_0_18px_rgba(215,255,101,0.9)]" />
+              Panel to page
+            </div>
+            <h1 className="max-w-2xl text-4xl font-black tracking-[-0.04em] text-white sm:text-6xl">
+              Manhwa AI
+              <span className="block text-zinc-500">Translator.</span>
+            </h1>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-400 sm:text-base">
+              Манхвагийн dialogue-г уншаад, дүрийн өнгө аясыг хадгалсан Монгол
+              орчуулгыг bubble дээр нь буцааж байрлуулна.
+            </p>
+          </div>
 
-        <div className="mb-10 text-center">
-          <h1 className="text-4xl font-bold tracking-tight">
-            Manhwa AI Translator
-          </h1>
+          <div className="flex items-center gap-2 self-start rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-zinc-400 sm:self-auto">
+            <span
+              className={`h-2 w-2 rounded-full ${isAnalyzed ? "bg-lime-300" : "bg-zinc-600"}`}
+            />
+            {activeProvider ? `${activeProvider} provider` : "AI ready"}
+          </div>
+        </header>
 
-          <p className="mt-3 text-zinc-400">
-            Манхвагийн зургийг AI ашиглан Монгол хэл рүү орчуулах
-          </p>
+        <div className="mb-7 grid grid-cols-3 gap-2 sm:max-w-xl">
+          {["Upload", "Understand", "Export"].map((step, index) => {
+            const complete =
+              index === 0
+                ? Boolean(file)
+                : index === 1
+                  ? isAnalyzed
+                  : isRendered;
+            return (
+              <div
+                key={step}
+                className="flex items-center gap-2 text-xs text-zinc-500"
+              >
+                <span
+                  className={`flex h-7 w-7 items-center justify-center rounded-full border text-[11px] font-bold ${complete ? "border-lime-300 bg-lime-300 text-black" : "border-white/15 bg-white/[0.04]"}`}
+                >
+                  {complete ? "✓" : index + 1}
+                </span>
+                <span className={complete ? "text-zinc-200" : ""}>{step}</span>
+              </div>
+            );
+          })}
         </div>
 
-        <div className="w-full max-w-3xl">
+        <div className="w-full">
           {/* UPLOAD */}
 
           {!image ? (
             <label
               htmlFor="image-upload"
-              className="flex min-h-[360px] cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-zinc-700 bg-zinc-900 p-8 transition hover:border-zinc-500 hover:bg-zinc-800"
+              className="group relative flex min-h-[380px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-dashed border-white/15 bg-white/[0.045] p-8 text-center shadow-2xl shadow-black/20 transition hover:border-lime-300/60 hover:bg-white/[0.07]"
             >
-              <div className="mb-5 text-7xl">🖼️</div>
+              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl border border-lime-300/30 bg-lime-300/10 text-4xl transition group-hover:scale-105">
+                ✦
+              </div>
 
-              <h2 className="text-2xl font-semibold">
-                Манхвагийн зураг оруулах
+              <h2 className="text-2xl font-bold tracking-tight">
+                Зургаа энд оруул
               </h2>
 
-              <p className="mt-3 text-sm text-zinc-400">
-                JPG, PNG, WEBP зураг сонгоно уу
+              <p className="mt-3 max-w-sm text-sm leading-6 text-zinc-500">
+                JPG, PNG, WEBP · 20MB хүртэл. Нэг panel upload хийгээд AI-гаар
+                уншуулна.
               </p>
+              <span className="mt-7 rounded-full bg-lime-300 px-5 py-2.5 text-sm font-bold text-black">
+                Choose image
+              </span>
             </label>
           ) : (
-            <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-4">
+            <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-black/25 p-3 shadow-2xl shadow-black/30 sm:p-5">
               <canvas
                 ref={canvasRef}
                 onPointerDown={handleBubblePointerDown}
@@ -953,7 +1104,7 @@ export default function Home() {
                 onPointerUp={handleBubblePointerUp}
                 onPointerCancel={handleBubblePointerUp}
                 title="Ногоон bubble хүрээг чирж байрлуулж, буланг чирж хэмжээг нь өөрчилнө"
-                className="mx-auto max-h-[700px] max-w-full touch-none rounded-xl object-contain"
+                className="mx-auto max-h-[760px] max-w-full touch-none rounded-2xl object-contain"
               />
             </div>
           )}
@@ -969,21 +1120,25 @@ export default function Home() {
           {/* BUTTONS */}
 
           {image && (
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
                 onClick={analyzeImage}
                 disabled={loading}
-                className="rounded-xl bg-white px-6 py-3 font-semibold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex-1 rounded-2xl bg-lime-300 px-6 py-3.5 font-bold text-black shadow-[0_12px_30px_rgba(215,255,101,0.12)] transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {loading ? "AI уншиж байна..." : "🤖 AI-аар уншиж орчуулах"}
+                {loading
+                  ? "AI уншиж байна..."
+                  : isAnalyzed
+                    ? "↻ Дахин AI-аар уншуулах"
+                    : "✦ AI-аар уншуулж эхлэх"}
               </button>
 
               <label
                 htmlFor="image-upload"
-                className="cursor-pointer rounded-xl border border-zinc-700 bg-zinc-900 px-6 py-3 text-center font-semibold transition hover:bg-zinc-800"
+                className="cursor-pointer rounded-2xl border border-white/10 bg-white/[0.05] px-6 py-3.5 text-center font-bold text-zinc-200 transition hover:bg-white/[0.1]"
               >
-                🖼️ Өөр зураг сонгох
+                Өөр зураг сонгох
               </label>
             </div>
           )}
@@ -991,7 +1146,8 @@ export default function Home() {
           {/* ERROR */}
 
           {error && (
-            <div className="mt-5 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
+            <div className="mt-5 flex items-start gap-3 rounded-2xl border border-red-400/25 bg-red-400/10 p-4 text-sm leading-6 text-red-200">
+              <span className="mt-0.5 text-red-300">!</span>
               {error}
             </div>
           )}
@@ -999,25 +1155,37 @@ export default function Home() {
           {/* SCENE CONTEXT */}
 
           {sceneContext && (
-            <div className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                AI-ийн ойлгосон scene
+            <div className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6">
+              <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-lime-300">
+                Scene note
               </p>
 
-              <p className="leading-7 text-zinc-300">{sceneContext}</p>
+              <p className="max-w-3xl text-sm leading-7 text-zinc-300">
+                {sceneContext}
+              </p>
             </div>
           )}
 
           {/* OCR RESULTS */}
 
           {originalTexts.length > 0 && (
-            <div className="mt-10">
-              <div className="mb-5">
-                <h2 className="text-2xl font-bold">Орчуулга засах</h2>
+            <div className="mt-12">
+              <div className="mb-6 flex flex-col gap-3 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-lime-300">
+                    Translation desk
+                  </p>
+                  <h2 className="text-3xl font-black tracking-tight">
+                    Орчуулгаа өнгөлөх
+                  </h2>
 
-                <p className="mt-1 text-sm text-zinc-500">
-                  AI-ийн орчуулгыг хүссэнээрээ өөрчилж болно.
-                </p>
+                  <p className="mt-2 text-sm text-zinc-500">
+                    AI-ийн орчуулгыг хүссэнээрээ өөрчилж болно.
+                  </p>
+                </div>
+                <span className="text-sm text-zinc-500">
+                  {originalTexts.length} text layer
+                </span>
               </div>
 
               <div className="space-y-4">
@@ -1029,14 +1197,14 @@ export default function Home() {
                   return (
                     <div
                       key={original.id}
-                      className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5"
+                      className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-5 shadow-xl shadow-black/10 transition hover:border-white/20"
                     >
                       <div className="mb-4 flex items-center justify-between">
-                        <span className="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-bold text-zinc-300">
+                        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-bold text-lime-200">
                           #{original.id}
                         </span>
 
-                        <span className="text-xs text-zinc-600">
+                        <span className="rounded-full bg-white/[0.06] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
                           {original.type}
                         </span>
                       </div>
@@ -1124,17 +1292,17 @@ export default function Home() {
 
                       {/* ORIGINAL */}
 
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                      <p className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
                         Эх текст
                       </p>
 
-                      <div className="rounded-xl bg-zinc-950 p-4 text-zinc-300">
+                      <div className="rounded-2xl border border-white/5 bg-black/25 p-4 text-sm leading-7 text-zinc-300">
                         {original.originalText}
                       </div>
 
                       {/* TRANSLATION */}
 
-                      <p className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                      <p className="mb-2 mt-5 text-xs font-bold uppercase tracking-[0.16em] text-lime-300/80">
                         Монгол орчуулга
                       </p>
 
@@ -1144,7 +1312,7 @@ export default function Home() {
                           updateTranslation(original.id, event.target.value)
                         }
                         rows={3}
-                        className="w-full resize-y rounded-xl border border-zinc-700 bg-zinc-950 p-4 text-lg leading-8 text-white outline-none transition focus:border-zinc-400"
+                        className="w-full resize-y rounded-2xl border border-white/15 bg-black/30 p-4 text-lg leading-8 text-white outline-none transition placeholder:text-zinc-600 focus:border-lime-300/70 focus:ring-4 focus:ring-lime-300/10"
                         placeholder="Монгол орчуулга..."
                       />
                     </div>
@@ -1159,18 +1327,20 @@ export default function Home() {
                   type="button"
                   onClick={renderTranslatedImage}
                   disabled={rendering}
-                  className="rounded-xl bg-white px-6 py-4 font-bold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-2xl bg-lime-300 px-6 py-4 font-bold text-black transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {rendering
                     ? "Зураг үүсгэж байна..."
-                    : "🇲🇳 Орчуулсан зураг үүсгэх"}
+                    : isRendered
+                      ? "↻ Дахин render хийх"
+                      : "↓ Орчуулсан зураг үүсгэх"}
                 </button>
 
-                {image && analysisTexts.length === 0 && (
+                {image && originalTexts.length > 0 && (
                   <button
                     type="button"
                     onClick={downloadImage}
-                    className="rounded-xl border border-zinc-700 bg-zinc-900 px-6 py-4 font-bold transition hover:bg-zinc-800"
+                    className="rounded-2xl border border-white/10 bg-white/[0.05] px-6 py-4 font-bold text-zinc-200 transition hover:bg-white/[0.1]"
                   >
                     ⬇️ PNG татах
                   </button>
@@ -1182,7 +1352,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={resetProject}
-                className="mt-3 w-full rounded-xl px-6 py-3 text-sm text-zinc-500 transition hover:bg-zinc-900 hover:text-white"
+                className="mt-4 w-full rounded-2xl border border-transparent px-6 py-3 text-sm text-zinc-500 transition hover:border-white/10 hover:bg-white/[0.04] hover:text-white"
               >
                 ↻ Шинээр эхлэх
               </button>
