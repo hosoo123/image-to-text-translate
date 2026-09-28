@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     plan_code: body.planCode,
     months: plan.months,
     price_mnt: plan.priceMnt,
-    amount_minor: plan.priceMnt * 100,
+    amount_minor: plan.priceMnt,
   }).select("id").single();
   if (orderError || !order) return Response.json({ error: "Захиалга үүсгэж чадсангүй." }, { status: 503 });
 
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     const intentResponse = await fetch("https://api.wire.mn/v1/payment_intents", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "Idempotency-Key": `intent-${order.id}` },
-      body: JSON.stringify({ amount: plan.priceMnt * 100, currency: "MNT", description: `Manhwa AI ${plan.label} эрх`, allowed_operators: allowedOperators }),
+      body: JSON.stringify({ amount: plan.priceMnt, currency: "MNT", description: `Manhwa AI ${plan.label} эрх`, allowed_operators: allowedOperators }),
     });
     const intentJson = await intentResponse.json();
     if (!intentResponse.ok || typeof intentJson.id !== "string") {
