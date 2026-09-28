@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import type { AdminUserUsage } from "@/lib/supabase/admin";
+import Spinner from "@/app/ui/spinner";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<AdminUserUsage[]>([]);
   const [error, setError] = useState("");
-  const [saving, setSaving] = useState<string | null>(null);
+  const [saving, setSaving] = useState<{ userId: string; action: "limit" | "grant" } | null>(null);
+  const [loadingUsers, setLoadingUsers] = useState(true);
 
   useEffect(() => {
     fetch("/api/admin/users")
@@ -15,11 +17,12 @@ export default function AdminUsers() {
         if (!response.ok) throw new Error(result.error ?? "Мэдээлэл уншиж чадсангүй.");
         setUsers(result.users);
       })
-      .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Алдаа гарлаа."));
+      .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Алдаа гарлаа."))
+      .finally(() => setLoadingUsers(false));
   }, []);
 
   async function saveLimit(userId: string, dailyLimit: number) {
-    setSaving(userId);
+    setSaving({ userId, action: "limit" });
     setError("");
     try {
       const response = await fetch("/api/admin/users", {
@@ -40,7 +43,7 @@ export default function AdminUsers() {
   async function grantMonth(userId: string) {
     const target = users.find((user) => user.id === userId);
     if (!target || !window.confirm(`${target.email} хэрэглэгчид 1 сарын Premium эрх үнэгүй өгөх үү?`)) return;
-    setSaving(userId);
+    setSaving({ userId, action: "grant" });
     setError("");
     try {
       const response = await fetch("/api/admin/subscriptions", {
@@ -61,18 +64,19 @@ export default function AdminUsers() {
   return (
     <section className="mt-7">
       {error && <p role="alert" className="mb-4 rounded-xl bg-red-400/10 p-4 text-sm text-red-200">{error}</p>}
-      {!users.length && !error ? <p className="text-sm text-white/60">Ачаалж байна…</p> : null}
+      {loadingUsers && <div role="status" className="mb-3 flex items-center gap-2 text-sm text-white/60"><Spinner className="text-lime-300" />Хэрэглэгчдийн мэдээлэл татаж байна…</div>}
+      {!loadingUsers && !users.length && !error && <p className="mb-3 text-sm text-white/60">Хэрэглэгч олдсонгүй.</p>}
       <div className="overflow-x-auto rounded-2xl border border-white/10">
         <table className="w-full min-w-[1120px] text-left text-sm">
           <thead className="bg-white/5 text-white/60"><tr><th className="p-4">Имэйл / утас</th><th className="p-4">Бүртгүүлсэн</th><th className="p-4">Анализ</th><th className="p-4">Орчуулга</th><th className="p-4">Өдрийн лимит</th><th className="p-4">Premium эрх</th><th className="p-4">Үйлдэл</th></tr></thead>
-          <tbody>{users.map((user) => <LimitRow key={user.id} user={user} saving={saving === user.id} onSave={saveLimit} onGrantMonth={grantMonth} />)}</tbody>
+          <tbody>{loadingUsers ? Array.from({ length: 5 }, (_, index) => <tr key={index} className="border-t border-white/10">{Array.from({ length: 7 }, (_, cell) => <td key={cell} className="p-4"><span className="block h-4 animate-pulse rounded bg-white/10" /></td>)}</tr>) : users.map((user) => <LimitRow key={user.id} user={user} savingLimit={saving?.userId === user.id && saving.action === "limit"} granting={saving?.userId === user.id && saving.action === "grant"} onSave={saveLimit} onGrantMonth={grantMonth} />)}</tbody>
         </table>
       </div>
     </section>
   );
 }
 
-function LimitRow({ user, saving, onSave, onGrantMonth }: { user: AdminUserUsage; saving: boolean; onSave: (id: string, limit: number) => void; onGrantMonth: (id: string) => void }) {
+function LimitRow({ user, savingLimit, granting, onSave, onGrantMonth }: { user: AdminUserUsage; savingLimit: boolean; granting: boolean; onSave: (id: string, limit: number) => void; onGrantMonth: (id: string) => void }) {
   const [limit, setLimit] = useState(String(user.dailyLimit));
   return (
     <tr className="border-t border-white/10">
@@ -82,10 +86,10 @@ function LimitRow({ user, saving, onSave, onGrantMonth }: { user: AdminUserUsage
       <td className="p-4">{user.translateCount}</td>
       <td className="p-4"><form className="flex items-center gap-2" onSubmit={(event) => { event.preventDefault(); onSave(user.id, Number(limit)); }}>
         <input aria-label={`${user.email} өдрийн лимит`} type="number" min="0" max="1000" value={limit} onChange={(event) => setLimit(event.target.value)} className="w-24 rounded-lg border border-white/15 bg-white/5 px-3 py-2" />
-        <button type="submit" disabled={saving || !Number.isInteger(Number(limit)) || Number(limit) < 0 || Number(limit) > 1000} className="rounded-lg bg-lime-300 px-3 py-2 font-medium text-black disabled:opacity-50">{saving ? "…" : "Хадгалах"}</button>
+        <button type="submit" disabled={savingLimit || granting || !Number.isInteger(Number(limit)) || Number(limit) < 0 || Number(limit) > 1000} className="inline-flex items-center gap-2 rounded-lg bg-lime-300 px-3 py-2 font-medium text-black disabled:opacity-50">{savingLimit && <Spinner className="h-3.5 w-3.5" />}{savingLimit ? "Хадгалж байна…" : "Хадгалах"}</button>
       </form></td>
       <td className="p-4">{user.subscriptionExpiresAt && Date.parse(user.subscriptionExpiresAt) > Date.now() ? `Premium · ${new Date(user.subscriptionExpiresAt).toLocaleDateString("mn-MN")} хүртэл` : "Free"}</td>
-      <td className="p-4"><button type="button" disabled={saving} onClick={() => onGrantMonth(user.id)} className="whitespace-nowrap rounded-lg border border-lime-300/30 px-3 py-2 text-lime-200 hover:bg-lime-300/10 disabled:opacity-50">1 сар үнэгүй өгөх</button></td>
+      <td className="p-4"><button type="button" disabled={savingLimit || granting} onClick={() => onGrantMonth(user.id)} className="inline-flex items-center gap-2 whitespace-nowrap rounded-lg border border-lime-300/30 px-3 py-2 text-lime-200 hover:bg-lime-300/10 disabled:opacity-50">{granting && <Spinner className="h-3.5 w-3.5" />}{granting ? "Эрх нэмж байна…" : "1 сар үнэгүй өгөх"}</button></td>
     </tr>
   );
 }

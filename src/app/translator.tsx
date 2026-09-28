@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Spinner from "@/app/ui/spinner";
 
 type AnalysisText = {
   id: string;
@@ -1130,6 +1131,7 @@ export default function Home() {
                 disabled={loading}
                 className="flex-1 rounded-2xl bg-lime-300 px-6 py-3.5 font-bold text-black shadow-[0_12px_30px_rgba(215,255,101,0.12)] transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-50"
               >
+                {loading && <Spinner className="mr-2 inline-block align-middle text-black" />}
                 {loading
                   ? "AI уншиж байна..."
                   : isAnalyzed
@@ -1332,6 +1334,7 @@ export default function Home() {
                   disabled={rendering}
                   className="rounded-2xl bg-lime-300 px-6 py-4 font-bold text-black transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-50"
                 >
+                  {rendering && <Spinner className="mr-2 inline-block align-middle text-black" />}
                   {rendering
                     ? "Зураг үүсгэж байна..."
                     : isRendered

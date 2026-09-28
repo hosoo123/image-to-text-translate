@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Spinner from "@/app/ui/spinner";
 
 export default function PaymentStatus({ orderId }: { orderId: string }) {
   const [status, setStatus] = useState("Төлбөр баталгаажихыг шалгаж байна…");
@@ -22,5 +23,6 @@ export default function PaymentStatus({ orderId }: { orderId: string }) {
     void check();
     return () => { stopped = true; };
   }, [orderId]);
-  return <p role="status" className="rounded-xl border border-lime-300/20 bg-lime-300/5 p-4 text-sm text-lime-100">{status}</p>;
+  const waiting = status.includes("шалгаж байна") || status.includes("хүлээгдэж байна") || status.includes("дахин шалгана");
+  return <div role="status" aria-live="polite" className="flex items-center gap-3 rounded-xl border border-lime-300/20 bg-lime-300/5 p-4 text-sm text-lime-100">{waiting && <Spinner className="text-lime-300" />}{status}</div>;
 }

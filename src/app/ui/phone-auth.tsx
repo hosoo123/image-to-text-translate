@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { safeNextPath } from "@/lib/safe-next";
+import Spinner from "@/app/ui/spinner";
 
 type Props = { mode: "login" | "signup"; next: string };
 type VerifySession = { sessionId: string; smsUri: string; instruction: string; expiresAt: string };
@@ -86,7 +87,7 @@ export default function PhoneAuth({ mode, next }: Props) {
       </div>}
       {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
       <button type="submit" disabled={busy} className="w-full rounded-xl bg-lime-300 px-4 py-3 font-semibold text-black disabled:opacity-60">
-        {busy ? "Түр хүлээнэ үү…" : isSignup ? session ? "SMS-ээ илгээсэн · Бүртгэл дуусгах" : "Дугаараа баталгаажуулах" : "Утсаар нэвтрэх"}
+        {busy && <Spinner className="mr-2 inline-block align-middle text-black" />}{busy ? "Түр хүлээнэ үү…" : isSignup ? session ? "SMS-ээ илгээсэн · Бүртгэл дуусгах" : "Дугаараа баталгаажуулах" : "Утсаар нэвтрэх"}
       </button>
       {session && <button type="button" onClick={() => { setSession(null); setError(""); }} className="w-full text-xs text-white/55 underline">Баталгаажуулалтыг шинээр эхлүүлэх</button>}
     </form>

@@ -6,6 +6,7 @@ import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
 import { safeNextPath } from "@/lib/safe-next";
 import PhoneAuth from "@/app/ui/phone-auth";
+import Spinner from "@/app/ui/spinner";
 
 export default function AuthForm({
   mode,
@@ -120,10 +121,8 @@ export default function AuthForm({
           onClick={signInWithGoogle}
           className="mt-6 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white px-4 py-3 font-medium text-zinc-900 disabled:opacity-60 sm:mt-8"
         >
-          <span aria-hidden="true" className="text-lg font-bold">
-            G
-          </span>
-          Google-ээр {isSignup ? "бүртгүүлэх" : "нэвтрэх"}
+          {busy ? <Spinner className="text-zinc-600" /> : <span aria-hidden="true" className="text-lg font-bold">G</span>}
+          {busy ? "Google-той холбож байна…" : `Google-ээр ${isSignup ? "бүртгүүлэх" : "нэвтрэх"}`}
         </button>
         <div className="my-5 flex items-center gap-3 text-xs text-white/40">
           <span className="h-px flex-1 bg-white/10" />
@@ -189,7 +188,7 @@ export default function AuthForm({
             disabled={busy}
             className="w-full rounded-xl bg-lime-300 px-4 py-3 font-semibold text-black disabled:opacity-60"
           >
-            {busy ? "Түр хүлээнэ үү…" : isSignup ? "Бүртгүүлэх" : "Нэвтрэх"}
+            {busy && <Spinner />}{busy ? "Түр хүлээнэ үү…" : isSignup ? "Бүртгүүлэх" : "Нэвтрэх"}
           </button>
         </form> : <PhoneAuth mode={mode} next={safeNextPath(next)} />}
         <p className="mt-6 text-sm text-white/60">
