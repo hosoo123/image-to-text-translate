@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
           <label className="block text-sm">Имэйл<input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 outline-none focus:border-lime-300" /></label>
           {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
           {message && <p role="status" className="text-sm text-lime-200">{message}</p>}
-          <button disabled={busy} className="w-full rounded-xl bg-lime-300 px-4 py-3 font-semibold text-black disabled:opacity-60">{busy ? "Илгээж байна…" : "Сэргээх холбоос илгээх"}</button>
+          <button type="submit" disabled={busy} className="w-full rounded-xl bg-lime-300 px-4 py-3 font-semibold text-black disabled:opacity-60">{busy ? "Илгээж байна…" : "Сэргээх холбоос илгээх"}</button>
         </form>
         <PhonePasswordRecovery />
       </section>

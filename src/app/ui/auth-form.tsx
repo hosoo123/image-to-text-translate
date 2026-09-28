@@ -185,6 +185,7 @@ export default function AuthForm({
             </div>
           )}
           <button
+            type="submit"
             disabled={busy}
             className="w-full rounded-xl bg-lime-300 px-4 py-3 font-semibold text-black disabled:opacity-60"
           >

@@ -36,7 +36,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <Link href="/plans" className="inline-block rounded-xl bg-lime-300 px-4 py-2 font-medium text-black">Эрхийн багц харах →</Link>
         <PhoneVerification phone={verifiedPhone?.phone ?? null} />
         {isAdminEmail(user.email) && <Link href="/admin" className="inline-block text-sm text-lime-300 underline">Admin panel →</Link>}
-        <form action={logout}><button className="rounded-xl border border-white/20 px-4 py-2 hover:bg-white/10">Гарах</button></form>
+        <form action={logout}><button type="submit" className="rounded-xl border border-white/20 px-4 py-2 hover:bg-white/10">Гарах</button></form>
       </section>
     </main>
   );

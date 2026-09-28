@@ -61,7 +61,7 @@ function LimitRow({ user, saving, onSave }: { user: AdminUserUsage; saving: bool
       <td className="p-4">{user.translateCount}</td>
       <td className="p-4"><form className="flex items-center gap-2" onSubmit={(event) => { event.preventDefault(); onSave(user.id, Number(limit)); }}>
         <input aria-label={`${user.email} өдрийн лимит`} type="number" min="0" max="1000" value={limit} onChange={(event) => setLimit(event.target.value)} className="w-24 rounded-lg border border-white/15 bg-white/5 px-3 py-2" />
-        <button disabled={saving || !Number.isInteger(Number(limit)) || Number(limit) < 0 || Number(limit) > 1000} className="rounded-lg bg-lime-300 px-3 py-2 font-medium text-black disabled:opacity-50">{saving ? "…" : "Хадгалах"}</button>
+        <button type="submit" disabled={saving || !Number.isInteger(Number(limit)) || Number(limit) < 0 || Number(limit) > 1000} className="rounded-lg bg-lime-300 px-3 py-2 font-medium text-black disabled:opacity-50">{saving ? "…" : "Хадгалах"}</button>
       </form></td>
     </tr>
   );

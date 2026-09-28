@@ -41,7 +41,7 @@ export default function PhonePasswordRecovery() {
       {session && <div className="rounded-xl border border-lime-300/20 bg-lime-300/5 p-3"><p className="text-sm">{session.instruction}</p><a href={session.smsUri} className="mt-3 inline-flex rounded-lg bg-white px-4 py-2 text-sm font-medium text-zinc-900">SMS нээх</a><p className="mt-2 text-xs text-white/55">SMS илгээсний дараа доорх товчийг дахин дарна уу.</p></div>}
       {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
       {message && <p role="status" className="text-sm text-lime-200">{message}</p>}
-      <button disabled={busy} className="w-full rounded-xl border border-white/15 px-4 py-3 text-sm disabled:opacity-60">{busy ? "Шалгаж байна…" : session ? "SMS-ээ илгээсэн · Нууц үг шинэчлэх" : "Баталгаажуулах SMS авах"}</button>
+      <button type="submit" disabled={busy} className="w-full rounded-xl border border-white/15 px-4 py-3 text-sm disabled:opacity-60">{busy ? "Шалгаж байна…" : session ? "SMS-ээ илгээсэн · Нууц үг шинэчлэх" : "Баталгаажуулах SMS авах"}</button>
       {session && <button type="button" onClick={() => setSession(null)} className="w-full text-xs text-white/50 underline">Шинээр эхлүүлэх</button>}
     </form>
   </section>;

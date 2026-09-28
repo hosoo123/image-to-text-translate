@@ -85,7 +85,7 @@ export default function PhoneAuth({ mode, next }: Props) {
         <p className="text-xs text-white/55">SMS илгээсний дараа доорх товчоор бүртгэлээ дуусгана. Кодыг бид нууц үгтэй хамт хадгалахгүй.</p>
       </div>}
       {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
-      <button disabled={busy} className="w-full rounded-xl bg-lime-300 px-4 py-3 font-semibold text-black disabled:opacity-60">
+      <button type="submit" disabled={busy} className="w-full rounded-xl bg-lime-300 px-4 py-3 font-semibold text-black disabled:opacity-60">
         {busy ? "Түр хүлээнэ үү…" : isSignup ? session ? "SMS-ээ илгээсэн · Бүртгэл дуусгах" : "Дугаараа баталгаажуулах" : "Утсаар нэвтрэх"}
       </button>
       {session && <button type="button" onClick={() => { setSession(null); setError(""); }} className="w-full text-xs text-white/55 underline">Баталгаажуулалтыг шинээр эхлүүлэх</button>}
