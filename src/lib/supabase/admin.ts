@@ -47,6 +47,7 @@ export type AdminUserUsage = {
   analyzeCount: number;
   translateCount: number;
   dailyLimit: number;
+  subscriptionExpiresAt: string | null;
 };
 
 export async function getAdminUsers(defaultLimit: number): Promise<AdminUserUsage[]> {
@@ -64,6 +65,7 @@ export async function getAdminUsers(defaultLimit: number): Promise<AdminUserUsag
     { data: usageRows, error: usageError },
     { data: limitRows, error: limitError },
     { data: phoneRows, error: phoneError },
+    { data: subscriptionRows, error: subscriptionError },
   ] =
     await Promise.all([
       admin
@@ -73,16 +75,19 @@ export async function getAdminUsers(defaultLimit: number): Promise<AdminUserUsag
         .limit(10000),
       admin.from("user_ai_limits").select("user_id, daily_limit").limit(10000),
       admin.from("user_phone_verifications").select("user_id, phone").limit(10000),
+      admin.from("user_subscriptions").select("user_id, expires_at").limit(10000),
     ]);
   if (usageError) throw usageError;
   if (limitError) throw limitError;
   if (phoneError) throw phoneError;
+  if (subscriptionError) throw subscriptionError;
 
   const usageById = new Map(
     (usageRows ?? []).map((row) => [row.user_id, row]),
   );
   const limitById = new Map((limitRows ?? []).map((row) => [row.user_id, row.daily_limit]));
   const phoneById = new Map((phoneRows ?? []).map((row) => [row.user_id, row.phone]));
+  const subscriptionById = new Map((subscriptionRows ?? []).map((row) => [row.user_id, row.expires_at]));
   return users
     .map((user) => {
       const usage = usageById.get(user.id);
@@ -95,6 +100,7 @@ export async function getAdminUsers(defaultLimit: number): Promise<AdminUserUsag
         analyzeCount: usage?.analyze_count ?? 0,
         translateCount: usage?.translate_count ?? 0,
         dailyLimit: limitById.get(user.id) ?? defaultLimit,
+        subscriptionExpiresAt: subscriptionById.get(user.id) ?? null,
       };
     })
     .sort((a, b) => b.analyzeCount + b.translateCount - (a.analyzeCount + a.translateCount));
