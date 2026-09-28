@@ -11,6 +11,10 @@ type AnalysisText = {
   y: number;
   width: number;
   height: number;
+  sourceX?: number;
+  sourceY?: number;
+  sourceWidth?: number;
+  sourceHeight?: number;
   bubbleX?: number;
   bubbleY?: number;
   bubbleWidth?: number;
@@ -43,6 +47,7 @@ type BubbleShape = NonNullable<AnalysisText["bubbleShape"]>;
 
 type BubbleDrag = {
   id: string;
+  target: "bubble" | "text";
   mode: "move" | "resize";
   startX: number;
   startY: number;
@@ -233,6 +238,14 @@ export default function Home() {
         ctx.strokeStyle = "#ef4444";
         ctx.lineWidth = Math.max(2, Math.round(img.naturalWidth / 600));
         ctx.strokeRect(item.x, item.y, item.width, item.height);
+        const textHandleSize = Math.max(10, Math.round(img.naturalWidth / 140));
+        ctx.fillStyle = "#ef4444";
+        ctx.fillRect(
+          item.x + item.width - textHandleSize / 2,
+          item.y + item.height - textHandleSize / 2,
+          textHandleSize,
+          textHandleSize,
+        );
 
         const fontSize = Math.max(16, Math.round(img.naturalWidth / 35));
         ctx.fillStyle = "#ef4444";
@@ -326,7 +339,13 @@ export default function Home() {
 
       setActiveProvider(analyzeResponse.headers.get("X-AI-Provider") || "");
 
-      const texts = analyzeData.texts as AnalysisText[];
+      const texts = (analyzeData.texts as AnalysisText[]).map((item) => ({
+        ...item,
+        sourceX: item.x,
+        sourceY: item.y,
+        sourceWidth: item.width,
+        sourceHeight: item.height,
+      }));
 
       const detectedSceneContext =
         typeof analyzeData.sceneContext === "string"
@@ -412,6 +431,16 @@ export default function Home() {
     setAnalysisTexts((current) => current.map(updateItem));
   }
 
+  function updateTextBounds(id: string, bounds: BubbleBounds) {
+    const updateItem = (item: AnalysisText) =>
+      item.id === id
+        ? { ...item, x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height }
+        : item;
+
+    setOriginalTexts((current) => current.map(updateItem));
+    setAnalysisTexts((current) => current.map(updateItem));
+  }
+
   function getCanvasPoint(event: React.PointerEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current;
     if (!canvas) return null;
@@ -435,31 +464,63 @@ export default function Home() {
     const hitRadius = Math.max(10, point.scale * 10);
     const item = [...analysisTexts].reverse().find((candidate) => {
       const bounds = getBubbleBounds(candidate, canvas.width, canvas.height);
-      const inResizeHandle =
+      const inBubbleResizeHandle =
         Math.abs(point.x - (bounds.x + bounds.width)) <= hitRadius &&
         Math.abs(point.y - (bounds.y + bounds.height)) <= hitRadius;
-      const insideBounds =
+      const textBounds = {
+        x: candidate.x,
+        y: candidate.y,
+        width: candidate.width,
+        height: candidate.height,
+      };
+      const inTextResizeHandle =
+        Math.abs(point.x - (textBounds.x + textBounds.width)) <= hitRadius &&
+        Math.abs(point.y - (textBounds.y + textBounds.height)) <= hitRadius;
+      const nearTextBorder =
+        point.x >= textBounds.x - hitRadius &&
+        point.x <= textBounds.x + textBounds.width + hitRadius &&
+        point.y >= textBounds.y - hitRadius &&
+        point.y <= textBounds.y + textBounds.height + hitRadius &&
+        (Math.abs(point.x - textBounds.x) <= hitRadius ||
+          Math.abs(point.x - (textBounds.x + textBounds.width)) <= hitRadius ||
+          Math.abs(point.y - textBounds.y) <= hitRadius ||
+          Math.abs(point.y - (textBounds.y + textBounds.height)) <= hitRadius);
+      const insideBubble =
         point.x >= bounds.x &&
         point.x <= bounds.x + bounds.width &&
         point.y >= bounds.y &&
         point.y <= bounds.y + bounds.height;
 
-      return inResizeHandle || insideBounds;
+      return inTextResizeHandle || nearTextBorder || inBubbleResizeHandle || insideBubble;
     });
 
     if (!item) return;
 
     const bounds = getBubbleBounds(item, canvas.width, canvas.height);
-    const inResizeHandle =
+    const textBounds = { x: item.x, y: item.y, width: item.width, height: item.height };
+    const inTextResizeHandle =
+      Math.abs(point.x - (textBounds.x + textBounds.width)) <= hitRadius &&
+      Math.abs(point.y - (textBounds.y + textBounds.height)) <= hitRadius;
+    const nearTextBorder =
+      point.x >= textBounds.x - hitRadius &&
+      point.x <= textBounds.x + textBounds.width + hitRadius &&
+      point.y >= textBounds.y - hitRadius &&
+      point.y <= textBounds.y + textBounds.height + hitRadius &&
+      (Math.abs(point.x - textBounds.x) <= hitRadius ||
+        Math.abs(point.x - (textBounds.x + textBounds.width)) <= hitRadius ||
+        Math.abs(point.y - textBounds.y) <= hitRadius ||
+        Math.abs(point.y - (textBounds.y + textBounds.height)) <= hitRadius);
+    const inBubbleResizeHandle =
       Math.abs(point.x - (bounds.x + bounds.width)) <= hitRadius &&
       Math.abs(point.y - (bounds.y + bounds.height)) <= hitRadius;
 
     bubbleDragRef.current = {
       id: item.id,
-      mode: inResizeHandle ? "resize" : "move",
+      target: inTextResizeHandle || nearTextBorder ? "text" : "bubble",
+      mode: inTextResizeHandle || (!nearTextBorder && inBubbleResizeHandle) ? "resize" : "move",
       startX: point.x,
       startY: point.y,
-      bounds,
+      bounds: inTextResizeHandle || nearTextBorder ? textBounds : bounds,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
     event.preventDefault();
@@ -477,7 +538,8 @@ export default function Home() {
     const deltaY = point.y - drag.startY;
 
     if (drag.mode === "move") {
-      updateBubbleBounds(drag.id, {
+      const update = drag.target === "text" ? updateTextBounds : updateBubbleBounds;
+      update(drag.id, {
         ...drag.bounds,
         x: Math.max(
           0,
@@ -492,14 +554,15 @@ export default function Home() {
       const item = analysisTexts.find((candidate) => candidate.id === drag.id);
       if (!item) return;
 
-      updateBubbleBounds(drag.id, {
+      const update = drag.target === "text" ? updateTextBounds : updateBubbleBounds;
+      update(drag.id, {
         ...drag.bounds,
         width: Math.max(
-          item.width,
+          Math.min(12, drag.bounds.width),
           Math.min(canvas.width - drag.bounds.x, drag.bounds.width + deltaX),
         ),
         height: Math.max(
-          item.height,
+          Math.min(12, drag.bounds.height),
           Math.min(canvas.height - drag.bounds.y, drag.bounds.height + deltaY),
         ),
       });
@@ -880,6 +943,12 @@ export default function Home() {
           width: item.width,
           height: item.height,
         };
+        const sourceTextBounds = {
+          x: item.sourceX ?? item.x,
+          y: item.sourceY ?? item.y,
+          width: item.sourceWidth ?? item.width,
+          height: item.sourceHeight ?? item.height,
+        };
 
         /*
          * Bubble-ийн background
@@ -887,20 +956,57 @@ export default function Home() {
          */
         const backgroundColor = detectBackgroundColor(
           ctx,
-          hasFill ? bubbleX : item.x,
-          hasFill ? bubbleY : item.y,
-          hasFill ? bubbleWidth : item.width,
-          hasFill ? bubbleHeight : item.height,
+          sourceTextBounds.x,
+          sourceTextBounds.y,
+          sourceTextBounds.width,
+          sourceTextBounds.height,
           isThought,
-          !hasFill,
+          true,
         );
 
-        ctx.fillStyle = backgroundColor;
         if (hasFill) {
+          // Clear the source lettering at its OCR position, even when the
+          // green destination box has been moved elsewhere in the bubble.
+          ctx.fillStyle = backgroundColor;
+          const clearSourceText = (bounds: BubbleBounds) => {
+          const cleanupPadding = Math.max(
+            2,
+            Math.round(Math.min(bounds.width, bounds.height) * 0.035),
+          );
+            const left = Math.max(0, Math.floor(bounds.x - cleanupPadding));
+            const top = Math.max(0, Math.floor(bounds.y - cleanupPadding));
+            const right = Math.min(
+              canvas.width,
+              Math.ceil(bounds.x + bounds.width + cleanupPadding),
+            );
+            const bottom = Math.min(
+              canvas.height,
+              Math.ceil(bounds.y + bounds.height + cleanupPadding),
+            );
+            ctx.fillRect(left, top, right - left, bottom - top);
+          };
+          clearSourceText(sourceTextBounds);
+          if (
+            textBounds.x !== sourceTextBounds.x ||
+            textBounds.y !== sourceTextBounds.y ||
+            textBounds.width !== sourceTextBounds.width ||
+            textBounds.height !== sourceTextBounds.height
+          ) {
+            clearSourceText(textBounds);
+          }
+          ctx.fillStyle = backgroundColor;
           traceBubbleShape(ctx, bubbleBounds, shape);
           ctx.fill();
         } else {
-          eraseTextRegionWithInterpolation(ctx, textBounds);
+          eraseTextRegionWithInterpolation(ctx, sourceTextBounds);
+          if (
+            textBounds.x !== sourceTextBounds.x ||
+            textBounds.y !== sourceTextBounds.y ||
+            textBounds.width !== sourceTextBounds.width ||
+            textBounds.height !== sourceTextBounds.height
+          ) {
+            eraseTextRegionWithInterpolation(ctx, textBounds);
+          }
         }
 
         const textBoundsForLayout =
@@ -1107,9 +1213,15 @@ export default function Home() {
                 onPointerMove={handleBubblePointerMove}
                 onPointerUp={handleBubblePointerUp}
                 onPointerCancel={handleBubblePointerUp}
-                title="Ногоон bubble хүрээг чирж байрлуулж, буланг чирж хэмжээг нь өөрчилнө"
+                title="Ногоон хүрээг дотроос нь чирж байрлуул; улаан хүрээг захнаас нь чирж OCR байрлалыг зас; булангийн бариулаар хэмжээг өөрчил"
                 className="mx-auto max-h-[58svh] max-w-full touch-none rounded-lg object-contain sm:max-h-[760px] sm:rounded-2xl"
               />
+              {analysisTexts.length > 0 && (
+                <div className="mx-auto mt-3 flex max-w-3xl flex-wrap gap-x-5 gap-y-2 px-1 text-xs text-zinc-400">
+                  <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-sm bg-green-500" />Ногоон: орчуулгын байрлал. Хүрээний дотор чирж хөдөлгө, буланг чирж хэмжээг өөрчил.</span>
+                  <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-sm bg-red-500" />Улаан: эх текстийн OCR хүрээ. Захыг чирж хөдөлгө, буланг чирж хэмжээг өөрчил.</span>
+                </div>
+              )}
             </div>
           )}
 
