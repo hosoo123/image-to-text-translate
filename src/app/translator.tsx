@@ -1022,36 +1022,36 @@ export default function Home() {
 
   return (
     <main className="min-h-screen text-white">
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-5 sm:px-8 sm:py-10">
-        <header className="mb-8 flex flex-col gap-6 border-b border-white/10 pb-7 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mx-auto flex min-h-svh w-full max-w-6xl flex-col px-3 py-4 sm:px-8 sm:py-10">
+        <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-5 sm:mb-8 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-7">
           <div>
-            <div className="mb-4 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.22em] text-lime-300">
+            <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-lime-300 sm:mb-4 sm:gap-3 sm:text-xs sm:tracking-[0.22em]">
               <span className="h-2 w-2 rounded-full bg-lime-300 shadow-[0_0_18px_rgba(215,255,101,0.9)]" />
               Panel to page
             </div>
-            <h1 className="max-w-2xl text-4xl font-black tracking-[-0.04em] text-white sm:text-6xl">
+            <h1 className="max-w-2xl text-3xl font-black tracking-[-0.04em] text-white min-[380px]:text-4xl sm:text-6xl">
               Manhwa AI
               <span className="block text-zinc-500">Translator.</span>
             </h1>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-400 sm:text-base">
+            <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400 sm:mt-4 sm:text-base">
               Манхвагийн dialogue-г уншаад, дүрийн өнгө аясыг хадгалсан Монгол
               орчуулгыг bubble дээр нь буцааж байрлуулна.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
-            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-zinc-400">
+          <div className="flex w-full flex-wrap items-center justify-between gap-2 self-start sm:w-auto sm:justify-start sm:gap-3 sm:self-auto">
+            <div className="flex min-h-10 items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-zinc-400">
               <span
                 className={`h-2 w-2 rounded-full ${isAnalyzed ? "bg-lime-300" : "bg-zinc-600"}`}
               />
               {activeProvider ? `${activeProvider} provider` : "AI ready"}
             </div>
-            <a href="/account" className="rounded-full border border-white/10 px-3 py-2 text-xs text-zinc-300 hover:bg-white/10">Бүртгэл</a>
+            <a href="/account" className="inline-flex min-h-10 items-center rounded-full border border-white/10 px-3 py-2 text-xs text-zinc-300 hover:bg-white/10">Бүртгэл</a>
           </div>
         </header>
 
-        <div className="mb-7 grid grid-cols-3 gap-1 sm:max-w-xl sm:gap-2">
-          {["Upload", "Understand", "Export"].map((step, index) => {
+        <div className="mb-5 grid grid-cols-3 gap-1 sm:mb-7 sm:max-w-xl sm:gap-2">
+          {["Зураг", "Унших", "Татах"].map((step, index) => {
             const complete =
               index === 0
                 ? Boolean(file)
@@ -1061,7 +1061,7 @@ export default function Home() {
             return (
               <div
                 key={step}
-                className="flex items-center gap-1 text-[11px] text-zinc-500 sm:gap-2 sm:text-xs"
+                className="flex min-w-0 items-center gap-1 text-[10px] text-zinc-500 sm:gap-2 sm:text-xs"
               >
                 <span
                   className={`flex h-7 w-7 items-center justify-center rounded-full border text-[11px] font-bold ${complete ? "border-lime-300 bg-lime-300 text-black" : "border-white/15 bg-white/[0.04]"}`}
@@ -1080,9 +1080,9 @@ export default function Home() {
           {!image ? (
             <label
               htmlFor="image-upload"
-              className="group relative flex min-h-[320px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-dashed border-white/15 bg-white/[0.045] p-6 text-center shadow-2xl shadow-black/20 transition hover:border-lime-300/60 hover:bg-white/[0.07] sm:min-h-[380px] sm:p-8"
+              className="group relative flex min-h-[250px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border border-dashed border-white/15 bg-white/[0.045] p-5 text-center shadow-2xl shadow-black/20 transition hover:border-lime-300/60 hover:bg-white/[0.07] sm:min-h-[380px] sm:rounded-[2rem] sm:p-8"
             >
-              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl border border-lime-300/30 bg-lime-300/10 text-4xl transition group-hover:scale-105">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-lime-300/30 bg-lime-300/10 text-3xl transition group-hover:scale-105 sm:mb-6 sm:h-20 sm:w-20 sm:rounded-3xl sm:text-4xl">
                 ✦
               </div>
 
@@ -1107,7 +1107,7 @@ export default function Home() {
                 onPointerUp={handleBubblePointerUp}
                 onPointerCancel={handleBubblePointerUp}
                 title="Ногоон bubble хүрээг чирж байрлуулж, буланг чирж хэмжээг нь өөрчилнө"
-                className="mx-auto max-h-[76svh] max-w-full touch-none rounded-xl object-contain sm:max-h-[760px] sm:rounded-2xl"
+                className="mx-auto max-h-[58svh] max-w-full touch-none rounded-lg object-contain sm:max-h-[760px] sm:rounded-2xl"
               />
             </div>
           )}

@@ -31,10 +31,10 @@ const steps = [
 export default function HomePage() {
   return (
     <main className="min-h-screen text-white">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 py-4 sm:px-8 sm:py-5">
         <Link
           href="/"
-          className="flex items-center gap-3 font-semibold tracking-tight"
+          className="flex shrink-0 items-center gap-2 font-semibold tracking-tight sm:gap-3"
         >
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-lime-300 font-black text-zinc-950">
             M
@@ -61,42 +61,42 @@ export default function HomePage() {
           </Link>
           <Link
             href="/login"
-            className="rounded-xl px-3 py-2 text-sm text-white/75 hover:text-white"
+            className="hidden rounded-xl px-3 py-2 text-sm text-white/75 hover:text-white sm:inline-flex"
           >
             Нэвтрэх
           </Link>
           <Link
             href="/workspace"
-            className="rounded-xl bg-lime-300 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-lime-200"
+            className="rounded-xl bg-lime-300 px-3 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-lime-200 sm:px-4"
           >
             Эхлэх
           </Link>
         </div>
       </header>
 
-      <section className="mx-auto grid w-full max-w-6xl items-center gap-12 px-5 pb-20 pt-12 sm:px-8 sm:pb-28 sm:pt-20 lg:grid-cols-[1.1fr_0.9fr]">
+      <section className="mx-auto grid w-full max-w-6xl items-center gap-9 px-4 pb-14 pt-8 sm:gap-12 sm:px-8 sm:pb-28 sm:pt-20 lg:grid-cols-[1.1fr_0.9fr]">
         <div>
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-lime-300/20 bg-lime-300/5 px-3 py-1.5 text-xs font-medium text-lime-200">
             <span className="h-1.5 w-1.5 rounded-full bg-lime-300" /> Манхва
             унших, орчуулахад туслах AI хэрэгсэл
           </div>
-          <h1 className="max-w-3xl text-5xl font-black leading-[1.05] tracking-[-0.055em] sm:text-7xl">
+          <h1 className="max-w-3xl text-4xl font-black leading-[1.06] tracking-[-0.055em] min-[380px]:text-5xl sm:text-7xl">
             Манхвагаа <span className="text-lime-300">Монгол хэлээр.</span>
           </h1>
           <p className="mt-6 max-w-xl text-base leading-7 text-zinc-400 sm:text-lg">
             Зургаа оруулаад текстийг таньж, дүрийн ярианы өнгө аяст тохирсон
             орчуулгыг bubble дээр нь байрлуул.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-7 flex flex-col gap-3 min-[420px]:flex-row sm:mt-8">
             <Link
               href="/workspace"
-              className="rounded-xl bg-lime-300 px-5 py-3.5 font-semibold text-zinc-950 hover:bg-lime-200"
+              className="rounded-xl bg-lime-300 px-5 py-3.5 text-center font-semibold text-zinc-950 hover:bg-lime-200 min-[420px]:w-fit"
             >
               Орчуулж эхлэх <span aria-hidden="true">→</span>
             </Link>
             <a
               href="#guide"
-              className="rounded-xl border border-white/15 px-5 py-3.5 font-medium text-white/80 hover:bg-white/5"
+              className="rounded-xl border border-white/15 px-5 py-3.5 text-center font-medium text-white/80 hover:bg-white/5 min-[420px]:w-fit"
             >
               Заавар үзэх
             </a>
@@ -140,18 +140,18 @@ export default function HomePage() {
         id="features"
         className="border-y border-white/[0.07] bg-white/2"
       >
-        <div className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-8 sm:py-20">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-lime-300">
             Юу хийж чадах вэ?
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
             Зургаас бэлэн орчуулга хүртэл
           </h2>
-          <div className="mt-9 grid gap-4 md:grid-cols-3">
+          <div className="mt-6 grid gap-3 sm:mt-9 sm:gap-4 md:grid-cols-3">
             {features.map((feature) => (
               <article
                 key={feature.number}
-                className="rounded-2xl border border-white/10 bg-[#111319]/80 p-6"
+                className="rounded-2xl border border-white/10 bg-[#111319]/80 p-5 sm:p-6"
               >
                 <p className="text-sm font-bold text-lime-300">
                   {feature.number}
@@ -168,7 +168,7 @@ export default function HomePage() {
 
       <section
         id="guide"
-        className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-8 sm:py-20"
+        className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-8 sm:py-20"
       >
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-lime-300">
@@ -181,11 +181,11 @@ export default function HomePage() {
             Орчуулгын ажлын хэсэгт нэвтэрсний дараа дараах алхмуудыг хийнэ.
           </p>
         </div>
-        <ol className="mt-9 grid gap-3 sm:grid-cols-2">
+        <ol className="mt-6 grid gap-3 sm:mt-9 sm:grid-cols-2">
           {steps.map(([title, description], index) => (
             <li
               key={title}
-              className="flex gap-4 rounded-2xl border border-white/10 bg-white/2.5 p-5"
+              className="flex gap-3 rounded-2xl border border-white/10 bg-white/2.5 p-4 sm:gap-4 sm:p-5"
             >
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-lime-300/10 text-sm font-bold text-lime-300">
                 {index + 1}
@@ -201,10 +201,10 @@ export default function HomePage() {
         </ol>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-5 pb-20 sm:px-8 sm:pb-24">
-        <div className="flex flex-col items-start justify-between gap-6 rounded-3xl border border-lime-300/20 bg-linear-to-br from-lime-300/10 to-white/2 p-7 sm:flex-row sm:items-center sm:p-10">
+      <section className="mx-auto w-full max-w-6xl px-4 pb-12 sm:px-8 sm:pb-24">
+        <div className="flex flex-col items-start justify-between gap-5 rounded-3xl border border-lime-300/20 bg-linear-to-br from-lime-300/10 to-white/2 p-5 sm:flex-row sm:items-center sm:gap-6 sm:p-10">
           <div>
-            <h2 className="text-2xl font-bold">
+            <h2 className="text-xl font-bold sm:text-2xl">
               Эхний хуудсаа орчуулахад бэлэн үү?
             </h2>
             <p className="mt-2 text-sm text-zinc-400">
@@ -213,7 +213,7 @@ export default function HomePage() {
           </div>
           <Link
             href="/workspace"
-            className="shrink-0 rounded-xl bg-lime-300 px-5 py-3.5 font-semibold text-zinc-950 hover:bg-lime-200"
+            className="w-full shrink-0 rounded-xl bg-lime-300 px-5 py-3.5 text-center font-semibold text-zinc-950 hover:bg-lime-200 sm:w-auto"
           >
             Эхлэх →
           </Link>

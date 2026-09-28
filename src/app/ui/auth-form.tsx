@@ -103,12 +103,12 @@ export default function AuthForm({
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-5 py-12">
-      <section className="w-full max-w-md rounded-3xl border border-white/10 bg-black/30 p-8 shadow-2xl backdrop-blur">
+    <main className="flex min-h-svh items-start justify-center px-3 py-4 sm:items-center sm:px-5 sm:py-12">
+      <section className="w-full max-w-md rounded-2xl border border-white/10 bg-black/30 p-5 shadow-2xl backdrop-blur sm:rounded-3xl sm:p-8">
         <Link href="/" className="text-sm text-lime-300">
           Manhwa AI Translator
         </Link>
-        <h1 className="mt-6 text-3xl font-semibold">
+        <h1 className="mt-4 text-2xl font-semibold sm:mt-6 sm:text-3xl">
           {isSignup ? "Бүртгүүлэх" : "Нэвтрэх"}
         </h1>
         <p className="mt-2 text-sm text-white/60">
@@ -118,7 +118,7 @@ export default function AuthForm({
           type="button"
           disabled={busy}
           onClick={signInWithGoogle}
-          className="mt-8 flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white px-4 py-3 font-medium text-zinc-900 disabled:opacity-60"
+          className="mt-6 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white px-4 py-3 font-medium text-zinc-900 disabled:opacity-60 sm:mt-8"
         >
           <span aria-hidden="true" className="text-lg font-bold">
             G

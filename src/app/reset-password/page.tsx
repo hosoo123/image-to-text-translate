@@ -40,9 +40,9 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-5 py-12">
-      <section className="w-full max-w-md rounded-3xl border border-white/10 bg-black/30 p-8 shadow-2xl backdrop-blur">
-        <h1 className="text-3xl font-semibold">Шинэ нууц үг</h1>
+    <main className="flex min-h-svh items-start justify-center px-3 py-4 sm:items-center sm:px-5 sm:py-12">
+      <section className="w-full max-w-md rounded-2xl border border-white/10 bg-black/30 p-5 shadow-2xl backdrop-blur sm:rounded-3xl sm:p-8">
+        <h1 className="text-2xl font-semibold sm:text-3xl">Шинэ нууц үг</h1>
         <p className="mt-2 text-sm text-white/60">Шинэ нууц үгээ хоёр удаа оруулна уу.</p>
         <form onSubmit={submit} className="mt-7 space-y-4">
           <label className="block text-sm">Шинэ нууц үг<input required minLength={6} type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 outline-none focus:border-lime-300" /></label>

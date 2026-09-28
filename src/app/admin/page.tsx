@@ -10,9 +10,9 @@ export default async function AdminPage() {
   if (!isAdminEmail(auth.user.email)) notFound();
 
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-10">
+    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-7 sm:px-5 sm:py-10">
       <Link href="/account" className="text-sm text-lime-300">← Бүртгэл рүү</Link>
-      <h1 className="mt-6 text-3xl font-semibold">Admin panel</h1>
+      <h1 className="mt-5 text-2xl font-semibold sm:mt-6 sm:text-3xl">Admin panel</h1>
       <p className="mt-2 text-sm text-white/60">Хэрэглэгчдийн өнөөдрийн AI хэрэглээ болон өдөр тутмын лимит.</p>
       {!hasAdminConfig() ? (
         <p className="mt-6 rounded-2xl border border-amber-300/20 bg-amber-300/5 p-5 text-amber-100">
