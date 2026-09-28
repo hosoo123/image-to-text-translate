@@ -79,10 +79,10 @@ export default function PhoneAuth({ mode, next }: Props) {
       <label className="block text-sm">Нууц үг
         <input required minLength={8} maxLength={72} type="password" autoComplete={isSignup ? "new-password" : "current-password"} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 min-h-11 w-full rounded-xl border border-white/15 bg-black/30 px-4 py-2 outline-none focus:border-lime-300" />
       </label>
-      {!isSignup && <div className="-mt-2 text-right"><Link href="/forgot-password" className="text-xs text-lime-300 underline">Нууц үгээ мартсан уу?</Link></div>}
+      {!isSignup && <div className="-mt-2 text-right"><Link href="/forgot-password" className="inline-flex min-h-11 items-center text-xs text-lime-300 underline">Нууц үгээ мартсан уу?</Link></div>}
       {session && <div className="space-y-3 rounded-xl border border-lime-300/20 bg-lime-300/5 p-3">
         <p className="text-sm">{session.instruction}</p>
-        <a href={session.smsUri} className="inline-flex rounded-lg bg-white px-4 py-2 text-sm font-medium text-zinc-900">SMS нээх</a>
+        <a href={session.smsUri} className="inline-flex min-h-11 items-center rounded-lg bg-white px-4 py-2 text-sm font-medium text-zinc-900">SMS нээх</a>
         <p className="text-xs text-white/55">SMS илгээсний дараа доорх товчоор бүртгэлээ дуусгана. Кодыг бид нууц үгтэй хамт хадгалахгүй.</p>
       </div>}
       {error && <p role="alert" className="text-sm text-red-300">{error}</p>}

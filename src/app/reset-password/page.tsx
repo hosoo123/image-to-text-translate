@@ -51,7 +51,7 @@ export default function ResetPasswordPage() {
           {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
           <button type="submit" disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-lime-300 px-4 py-3 font-semibold text-black disabled:opacity-60">{busy && <Spinner className="text-black" />}{busy ? "Хадгалж байна…" : "Нууц үг шинэчлэх"}</button>
         </form>
-        <Link href="/login" className="mt-5 inline-block text-sm text-lime-300 underline">Нэвтрэх хуудас руу</Link>
+        <Link href="/login" className="mt-5 inline-flex min-h-11 items-center text-sm text-lime-300 underline">Нэвтрэх хуудас руу</Link>
       </section>
     </main>
   );

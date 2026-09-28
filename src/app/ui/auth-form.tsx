@@ -106,7 +106,7 @@ export default function AuthForm({
   return (
     <main className="flex min-h-svh items-start justify-center px-3 py-4 sm:items-center sm:px-5 sm:py-12">
       <section className="w-full max-w-md rounded-2xl border border-white/10 bg-black/30 p-5 shadow-2xl backdrop-blur sm:rounded-3xl sm:p-8">
-        <Link href="/" className="text-sm text-lime-300">
+        <Link href="/" className="inline-flex min-h-11 items-center text-sm text-lime-300">
           Manhwa AI Translator
         </Link>
         <h1 className="mt-4 text-2xl font-semibold sm:mt-6 sm:text-3xl">
@@ -177,7 +177,7 @@ export default function AuthForm({
             <div className="-mt-2 text-right">
               <Link
                 href="/forgot-password"
-                className="text-xs text-lime-300 underline"
+                className="inline-flex min-h-11 items-center text-xs text-lime-300 underline"
               >
                 Нууц үгээ мартсан уу?
               </Link>

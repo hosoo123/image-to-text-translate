@@ -1022,7 +1022,7 @@ export default function Home() {
   const isRendered = image?.startsWith("data:image/") ?? false;
 
   return (
-    <main className="min-h-screen text-white">
+    <main className="min-h-svh text-white">
       <div className="mx-auto flex min-h-svh w-full max-w-6xl flex-col px-3 py-4 sm:px-8 sm:py-10">
         <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-5 sm:mb-8 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-7">
           <div>
@@ -1180,7 +1180,7 @@ export default function Home() {
                   <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-lime-300">
                     Translation desk
                   </p>
-                  <h2 className="text-3xl font-black tracking-tight">
+                  <h2 className="text-2xl font-black tracking-tight sm:text-3xl">
                     Орчуулгаа өнгөлөх
                   </h2>
 
@@ -1204,7 +1204,7 @@ export default function Home() {
                       key={original.id}
                       className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-4 shadow-xl shadow-black/10 transition hover:border-white/20 sm:p-5"
                     >
-                      <div className="mb-4 flex items-center justify-between">
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                         <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-bold text-lime-200">
                           #{original.id}
                         </span>

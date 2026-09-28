@@ -30,7 +30,7 @@ const steps = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen text-white">
+    <main className="min-h-svh text-white">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 py-4 sm:px-8 sm:py-5">
         <Link
           href="/"
@@ -55,7 +55,7 @@ export default function HomePage() {
         <div className="flex items-center gap-2 sm:gap-3">
           <Link
             href="/plans"
-            className="rounded-xl px-3 py-2 text-sm text-white/75 hover:text-white"
+            className="inline-flex min-h-11 items-center rounded-xl px-3 py-2 text-sm text-white/75 hover:text-white"
           >
             Багцууд
           </Link>
@@ -67,7 +67,7 @@ export default function HomePage() {
           </Link>
           <Link
             href="/workspace"
-            className="rounded-xl bg-lime-300 px-3 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-lime-200 sm:px-4"
+            className="inline-flex min-h-11 items-center rounded-xl bg-lime-300 px-3 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-lime-200 sm:px-4"
           >
             Эхлэх
           </Link>
@@ -144,7 +144,7 @@ export default function HomePage() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-lime-300">
             Юу хийж чадах вэ?
           </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-4xl">
             Зургаас бэлэн орчуулга хүртэл
           </h2>
           <div className="mt-6 grid gap-3 sm:mt-9 sm:gap-4 md:grid-cols-3">
@@ -174,7 +174,7 @@ export default function HomePage() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-lime-300">
             Энгийн 4 алхам
           </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-4xl">
             Хэрхэн ашиглах вэ?
           </h2>
           <p className="mt-3 leading-7 text-zinc-400">

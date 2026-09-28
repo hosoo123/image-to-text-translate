@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
   return (
     <main className="flex min-h-svh items-start justify-center px-3 py-4 sm:items-center sm:px-5 sm:py-12">
       <section className="w-full max-w-md rounded-2xl border border-white/10 bg-black/30 p-5 shadow-2xl backdrop-blur sm:rounded-3xl sm:p-8">
-        <Link href="/login" className="text-sm text-lime-300">← Нэвтрэх</Link>
+        <Link href="/login" className="inline-flex min-h-11 items-center text-sm text-lime-300">← Нэвтрэх</Link>
         <h1 className="mt-5 text-2xl font-semibold sm:mt-6 sm:text-3xl">Нууц үг сэргээх</h1>
         <p className="mt-2 text-sm text-white/60">Бүртгэлтэй имэйлээ оруулбал сэргээх холбоос илгээнэ.</p>
         <form onSubmit={submit} className="mt-7 space-y-4">

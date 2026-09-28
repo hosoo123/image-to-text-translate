@@ -11,7 +11,7 @@ export default async function AdminPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-7 sm:px-5 sm:py-10">
-      <Link href="/account" className="text-sm text-lime-300">← Бүртгэл рүү</Link>
+      <Link href="/account" className="inline-flex min-h-11 items-center text-sm text-lime-300">← Бүртгэл рүү</Link>
       <h1 className="mt-5 text-2xl font-semibold sm:mt-6 sm:text-3xl">Admin panel</h1>
       <p className="mt-2 text-sm text-white/60">Хэрэглэгчдийн өнөөдрийн AI хэрэглээ болон өдөр тутмын лимит.</p>
       {!hasAdminConfig() ? (
