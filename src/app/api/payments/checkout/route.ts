@@ -2,6 +2,18 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requireUser } from "@/lib/supabase/require-user";
 import { isPlanCode, PLANS } from "@/lib/billing/plans";
 
+function wireErrorDetails(payload: unknown) {
+  if (!payload || typeof payload !== "object") return { response: "Invalid JSON response" };
+  const rawError = "error" in payload ? payload.error : payload;
+  if (!rawError || typeof rawError !== "object") return { response: "Unexpected response shape" };
+  const error = rawError as Record<string, unknown>;
+  const details: Record<string, unknown> = {};
+  for (const key of ["type", "code", "message", "param", "request_id", "operator_decline_code"] as const) {
+    if (key in error && typeof error[key] === "string") details[key] = error[key];
+  }
+  return details;
+}
+
 export async function POST(request: Request) {
   const auth = await requireUser();
   if (!auth.configured) return Response.json({ error: "Supabase тохиргоо дутуу байна." }, { status: 503 });
@@ -36,7 +48,10 @@ export async function POST(request: Request) {
       body: JSON.stringify({ amount: plan.priceMnt * 100, currency: "MNT", description: `Manhwa AI ${plan.label} эрх`, allowed_operators: allowedOperators }),
     });
     const intentJson = await intentResponse.json();
-    if (!intentResponse.ok || typeof intentJson.id !== "string") throw new Error("WireMN төлбөрийн хүсэлт амжилтгүй.");
+    if (!intentResponse.ok || typeof intentJson.id !== "string") {
+      console.error("Wire PaymentIntent request failed", { status: intentResponse.status, ...wireErrorDetails(intentJson) });
+      throw new Error("WireMN төлбөрийн хүсэлт амжилтгүй.");
+    }
 
     const { error: intentSaveError } = await admin.from("payment_orders").update({ payment_intent_id: intentJson.id }).eq("id", order.id);
     if (intentSaveError) throw intentSaveError;
@@ -48,7 +63,10 @@ export async function POST(request: Request) {
       body: new URLSearchParams({ payment_intent: intentJson.id, success_url: `${baseUrl}/account?payment=${order.id}`, cancel_url: `${baseUrl}/plans?cancelled=1` }),
     });
     const checkoutJson = await checkoutResponse.json();
-    if (!checkoutResponse.ok || typeof checkoutJson.url !== "string") throw new Error("WireMN QR checkout үүссэнгүй.");
+    if (!checkoutResponse.ok || typeof checkoutJson.url !== "string") {
+      console.error("Wire checkout session request failed", { status: checkoutResponse.status, ...wireErrorDetails(checkoutJson) });
+      throw new Error("WireMN QR checkout үүссэнгүй.");
+    }
 
     const { error: updateError } = await admin.from("payment_orders").update({ checkout_url: checkoutJson.url }).eq("id", order.id);
     if (updateError) throw updateError;
