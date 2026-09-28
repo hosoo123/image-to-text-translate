@@ -103,13 +103,13 @@ as $$
     coalesce(usage.analyze_count, 0),
     coalesce(usage.translate_count, 0),
     coalesce(limits.daily_limit, greatest(0, least(p_default_limit, 1000)))
-  from (select auth.uid() as user_id) as current_user
+  from (select auth.uid() as user_id) as auth_context
   left join public.user_daily_ai_usage as usage
-    on usage.user_id = current_user.user_id
+    on usage.user_id = auth_context.user_id
     and usage.usage_date = (now() at time zone 'Asia/Ulaanbaatar')::date
   left join public.user_ai_limits as limits
-    on limits.user_id = current_user.user_id
-  where current_user.user_id is not null;
+    on limits.user_id = auth_context.user_id
+  where auth_context.user_id is not null;
 $$;
 
 revoke execute on function public.get_my_daily_ai_usage(integer) from public, anon;

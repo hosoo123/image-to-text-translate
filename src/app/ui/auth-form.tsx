@@ -14,9 +14,11 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("oauth_error")) {
+    const search = new URLSearchParams(window.location.search);
+    if (search.has("oauth_error")) {
       setError("Google-ээр нэвтрэхэд алдаа гарлаа. Дахин оролдоно уу.");
     }
+    if (search.has("password_updated")) setMessage("Нууц үг шинэчлэгдлээ. Шинэ нууц үгээрээ нэвтэрнэ үү.");
   }, []);
 
   async function signInWithGoogle() {
@@ -83,6 +85,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
         <form onSubmit={submit} className="mt-8 space-y-4">
           <label className="block text-sm">Имэйл<input required type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 outline-none focus:border-lime-300" /></label>
           <label className="block text-sm">Нууц үг<input required minLength={6} type="password" autoComplete={isSignup ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 outline-none focus:border-lime-300" /></label>
+          {!isSignup && <div className="-mt-2 text-right"><Link href="/forgot-password" className="text-xs text-lime-300 underline">Нууц үгээ мартсан уу?</Link></div>}
           {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
           {message && <p role="status" className="text-sm text-lime-200">{message}</p>}
           <button disabled={busy} className="w-full rounded-xl bg-lime-300 px-4 py-3 font-semibold text-black disabled:opacity-60">{busy ? "Түр хүлээнэ үү…" : isSignup ? "Бүртгүүлэх" : "Нэвтрэх"}</button>

@@ -20,7 +20,7 @@ DAILY_AI_REQUEST_LIMIT=20
 
 1. Google Cloud Console / Google Auth Platform дээр **Web application OAuth client** үүсгэ. `Authorized JavaScript origins` хэсэгт `http://localhost:3000` болон production сайтын origin-оо нэм.
 2. Supabase Dashboard → **Authentication → Sign In / Providers → Google** дээр provider-ийг асаагаад Google OAuth Client ID болон Client Secret-ээ тохируул. Google Cloud-ийн `Authorized redirect URI` талбарт энэ дэлгэц дээр Supabase-аас өгсөн callback URL-ийг хуул.
-3. Supabase Dashboard → **Authentication → URL Configuration** дээр Site URL-ийг `http://localhost:3000` болгоод Redirect URLs-д `http://localhost:3000/auth/callback` нэм. Production-д deploy хийсний дараа production домэйны `/auth/callback` URL-ийг бас allowlist-д оруул.
+3. Supabase Dashboard → **Authentication → URL Configuration** дээр Site URL-ийг `http://localhost:3000` болгоод Redirect URLs-д `http://localhost:3000/auth/callback` болон `http://localhost:3000/auth/reset-callback` нэм. Production-д deploy хийсний дараа production домэйны эдгээр хоёр callback URL-ийг бас allowlist-д оруул.
 4. Login эсвэл signup хуудасны **Google-ээр нэвтрэх** товчоор шалга.
 
 Google OAuth Client Secret-ийг зөвхөн Supabase Dashboard-д оруул. Энэ аппын `.env.local` эсвэл кодонд хийх шаардлагагүй. Supabase SSR нь authorization code-ийг callback route дээр session cookie болгон солилцдог.
