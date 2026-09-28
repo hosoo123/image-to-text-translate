@@ -60,7 +60,11 @@ export async function getAdminUsers(defaultLimit: number): Promise<AdminUserUsag
   }
 
   const today = mongoliaDate();
-  const [{ data: usageRows, error: usageError }, { data: limitRows, error: limitError }] =
+  const [
+    { data: usageRows, error: usageError },
+    { data: limitRows, error: limitError },
+    { data: phoneRows, error: phoneError },
+  ] =
     await Promise.all([
       admin
         .from("user_daily_ai_usage")
@@ -68,20 +72,25 @@ export async function getAdminUsers(defaultLimit: number): Promise<AdminUserUsag
         .eq("usage_date", today)
         .limit(10000),
       admin.from("user_ai_limits").select("user_id, daily_limit").limit(10000),
+      admin.from("user_phone_verifications").select("user_id, phone").limit(10000),
     ]);
   if (usageError) throw usageError;
   if (limitError) throw limitError;
+  if (phoneError) throw phoneError;
 
   const usageById = new Map(
     (usageRows ?? []).map((row) => [row.user_id, row]),
   );
   const limitById = new Map((limitRows ?? []).map((row) => [row.user_id, row.daily_limit]));
+  const phoneById = new Map((phoneRows ?? []).map((row) => [row.user_id, row.phone]));
   return users
     .map((user) => {
       const usage = usageById.get(user.id);
       return {
         id: user.id,
-        email: user.email ?? "(имэйлгүй)",
+        email: user.email?.endsWith("@phone-login.invalid")
+          ? `+976${phoneById.get(user.id) ?? ""}`
+          : user.email ?? "(имэйлгүй)",
         createdAt: user.created_at,
         analyzeCount: usage?.analyze_count ?? 0,
         translateCount: usage?.translate_count ?? 0,

@@ -50,8 +50,15 @@ export default function HomePage() {
           <a href="#guide" className="hover:text-white">
             Хэрхэн ашиглах вэ?
           </a>
+          <Link href="/plans" className="hover:text-white">Багцын үнэ</Link>
         </nav>
         <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href="/plans"
+            className="rounded-xl px-3 py-2 text-sm text-white/75 hover:text-white"
+          >
+            Багцууд
+          </Link>
           <Link
             href="/login"
             className="rounded-xl px-3 py-2 text-sm text-white/75 hover:text-white"

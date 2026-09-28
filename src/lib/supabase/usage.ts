@@ -18,7 +18,7 @@ export async function consumeAiUsage(kind: "analyze" | "translate") {
 
 export async function getMyAiUsage() {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("get_my_daily_ai_usage", {
+  const { data, error } = await supabase.rpc("get_my_plan_usage", {
     p_default_limit: dailyDefaultLimit(),
   });
   if (error) return null;
@@ -26,6 +26,24 @@ export async function getMyAiUsage() {
   return result as
     | { analyze_count: number; translate_count: number; daily_limit: number }
     | undefined;
+}
+
+export async function getMyPlanUsage() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_my_plan_usage", {
+    p_default_limit: dailyDefaultLimit(),
+  });
+  if (error) return null;
+  const result = Array.isArray(data) ? data[0] : data;
+  return result as {
+    analyze_count: number;
+    translate_count: number;
+    daily_limit: number;
+    plan_code: string;
+    expires_at: string | null;
+    monthly_used: number;
+    monthly_limit: number | null;
+  } | undefined;
 }
 
 export { dailyDefaultLimit };

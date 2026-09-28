@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
 import { safeNextPath } from "@/lib/safe-next";
+import PhoneAuth from "@/app/ui/phone-auth";
 
 export default function AuthForm({
   mode,
@@ -18,6 +19,7 @@ export default function AuthForm({
   initialMessage?: string;
 }) {
   const isSignup = mode === "signup";
+  const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(initialError);
@@ -125,10 +127,30 @@ export default function AuthForm({
         </button>
         <div className="my-5 flex items-center gap-3 text-xs text-white/40">
           <span className="h-px flex-1 bg-white/10" />
-          эсвэл имэйлээр
+          эсвэл
           <span className="h-px flex-1 bg-white/10" />
         </div>
-        <form onSubmit={submit} className="mt-8 space-y-4">
+        <div className="grid grid-cols-2 rounded-xl border border-white/10 bg-black/20 p-1">
+          <button
+            type="button"
+            aria-pressed={authMethod === "email"}
+            onClick={() => { setAuthMethod("email"); setError(""); setMessage(""); }}
+            className={`rounded-lg px-3 py-2.5 text-sm font-medium transition ${authMethod === "email" ? "bg-white/10 text-white shadow-sm" : "text-white/50 hover:text-white/80"}`}
+          >
+            Имэйлээр
+          </button>
+          <button
+            type="button"
+            aria-pressed={authMethod === "phone"}
+            onClick={() => { setAuthMethod("phone"); setError(""); setMessage(""); }}
+            className={`rounded-lg px-3 py-2.5 text-sm font-medium transition ${authMethod === "phone" ? "bg-white/10 text-white shadow-sm" : "text-white/50 hover:text-white/80"}`}
+          >
+            Утсаар
+          </button>
+        </div>
+        {error && <p role="alert" className="mt-4 text-sm text-red-300">{error}</p>}
+        {message && <p role="status" className="mt-4 text-sm text-lime-200">{message}</p>}
+        {authMethod === "email" ? <form onSubmit={submit} className="mt-5 space-y-4">
           <label className="block text-sm">
             Имэйл
             <input
@@ -162,23 +184,13 @@ export default function AuthForm({
               </Link>
             </div>
           )}
-          {error && (
-            <p role="alert" className="text-sm text-red-300">
-              {error}
-            </p>
-          )}
-          {message && (
-            <p role="status" className="text-sm text-lime-200">
-              {message}
-            </p>
-          )}
           <button
             disabled={busy}
             className="w-full rounded-xl bg-lime-300 px-4 py-3 font-semibold text-black disabled:opacity-60"
           >
             {busy ? "Түр хүлээнэ үү…" : isSignup ? "Бүртгүүлэх" : "Нэвтрэх"}
           </button>
-        </form>
+        </form> : <PhoneAuth mode={mode} next={safeNextPath(next)} />}
         <p className="mt-6 text-sm text-white/60">
           {isSignup ? "Бүртгэлтэй юу?" : "Бүртгэлгүй юу?"}{" "}
           <Link

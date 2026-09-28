@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
+import PhonePasswordRecovery from "@/app/ui/phone-password-recovery";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -48,6 +49,7 @@ export default function ForgotPasswordPage() {
           {message && <p role="status" className="text-sm text-lime-200">{message}</p>}
           <button disabled={busy} className="w-full rounded-xl bg-lime-300 px-4 py-3 font-semibold text-black disabled:opacity-60">{busy ? "Илгээж байна…" : "Сэргээх холбоос илгээх"}</button>
         </form>
+        <PhonePasswordRecovery />
       </section>
     </main>
   );
