@@ -1,4 +1,6 @@
 import { generateJsonWithFallback } from "@/lib/ai-providers";
+import { requireUser } from "@/lib/supabase/require-user";
+import { consumeAiUsage } from "@/lib/supabase/usage";
 
 type AnalyzeText = {
   id: string;
@@ -14,6 +16,14 @@ type AnalyzeText = {
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireUser();
+    if (!auth.configured) {
+      return Response.json({ error: "Supabase тохиргоо хийгдээгүй байна." }, { status: 503 });
+    }
+    if (!auth.user) {
+      return Response.json({ error: "Энэ үйлдлийг хийхийн тулд нэвтэрнэ үү." }, { status: 401 });
+    }
+
     const body = await request.json();
 
     const texts = body.texts as AnalyzeText[];
@@ -27,6 +37,16 @@ export async function POST(request: Request) {
         },
         { status: 400 },
       );
+    }
+
+    let usage;
+    try {
+      usage = await consumeAiUsage("translate");
+    } catch {
+      return Response.json({ error: "Хэрэглээний хүснэгт тохируулагдаагүй байна. Supabase migration ажиллуулна уу." }, { status: 503 });
+    }
+    if (!usage.allowed) {
+      return Response.json({ error: `Өдрийн AI лимит (${usage.daily_limit}) дууссан байна.` }, { status: 429 });
     }
 
     const inputText = texts

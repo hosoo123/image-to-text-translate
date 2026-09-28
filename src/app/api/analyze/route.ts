@@ -1,12 +1,32 @@
 import { generateJsonWithFallback } from "@/lib/ai-providers";
+import { requireUser } from "@/lib/supabase/require-user";
+import { consumeAiUsage } from "@/lib/supabase/usage";
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireUser();
+    if (!auth.configured) {
+      return Response.json({ error: "Supabase тохиргоо хийгдээгүй байна." }, { status: 503 });
+    }
+    if (!auth.user) {
+      return Response.json({ error: "Энэ үйлдлийг хийхийн тулд нэвтэрнэ үү." }, { status: 401 });
+    }
+
     const data = await request.formData();
     const image = data.get("image");
 
     if (!(image instanceof File)) {
       return Response.json({ error: "Зураг олдсонгүй." }, { status: 400 });
+    }
+
+    let usage;
+    try {
+      usage = await consumeAiUsage("analyze");
+    } catch {
+      return Response.json({ error: "Хэрэглээний хүснэгт тохируулагдаагүй байна. Supabase migration ажиллуулна уу." }, { status: 503 });
+    }
+    if (!usage.allowed) {
+      return Response.json({ error: `Өдрийн AI лимит (${usage.daily_limit}) дууссан байна.` }, { status: 429 });
     }
 
     const arrayBuffer = await image.arrayBuffer();
