@@ -59,8 +59,8 @@ export async function POST(request: Request) {
     const baseUrl = new URL(request.url).origin;
     const checkoutResponse = await fetch("https://api.wire.mn/v1/checkout/sessions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/x-www-form-urlencoded", "Idempotency-Key": `checkout-${order.id}` },
-      body: new URLSearchParams({ payment_intent: intentJson.id, success_url: `${baseUrl}/account?payment=${order.id}`, cancel_url: `${baseUrl}/plans?cancelled=1` }),
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "Idempotency-Key": `checkout-${order.id}` },
+      body: JSON.stringify({ payment_intent: intentJson.id, success_url: `${baseUrl}/account?payment=${order.id}`, cancel_url: `${baseUrl}/plans?cancelled=1` }),
     });
     const checkoutJson = await checkoutResponse.json();
     if (!checkoutResponse.ok || typeof checkoutJson.url !== "string") {
