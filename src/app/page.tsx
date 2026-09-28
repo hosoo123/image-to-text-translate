@@ -104,16 +104,16 @@ export default function HomePage() {
           aria-label="Зураг дээрх эх текст ба Монгол орчуулгын жишээ"
           className="relative mx-auto w-full max-w-md"
         >
-          <div className="absolute -inset-5 rounded-[2rem] bg-lime-300/10 blur-3xl" />
-          <div className="relative rotate-[-2deg] rounded-[1.75rem] border border-white/10 bg-[#171a20] p-4 shadow-2xl sm:p-5">
+          <div className="absolute -inset-5 rounded-4xl bg-lime-300/10 blur-3xl" />
+          <div className="relative -rotate-2 rounded-[1.75rem] border border-white/10 bg-[#171a20] p-4 shadow-2xl sm:p-5">
             <div className="mb-4 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-zinc-500">
               <span>Panel → page</span>
               <span className="text-lime-300">AI translate</span>
             </div>
             <div className="relative flex h-72 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[radial-gradient(ellipse_at_70%_35%,rgba(149,126,117,0.52),transparent_42%),linear-gradient(145deg,#34313a,#17191e_62%,#24262b)] p-6">
-              <div className="absolute bottom-0 left-8 h-48 w-28 rounded-t-[50%] bg-gradient-to-b from-[#777078] to-[#242329] opacity-80" />
+              <div className="absolute bottom-0 left-8 h-48 w-28 rounded-t-[50%] bg-linear-to-b from-[#777078] to-[#242329] opacity-80" />
               <div className="absolute right-7 top-7 rounded-[45%] border border-white/30 bg-[#f4f1e9] px-5 py-4 text-center text-xs font-semibold text-zinc-800 shadow-lg">
-                I'LL NEVER
+                I&apos;LL NEVER
                 <br />
                 GIVE UP!
               </div>
@@ -131,7 +131,7 @@ export default function HomePage() {
 
       <section
         id="features"
-        className="border-y border-white/[0.07] bg-white/[0.02]"
+        className="border-y border-white/[0.07] bg-white/2"
       >
         <div className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-lime-300">
@@ -178,7 +178,7 @@ export default function HomePage() {
           {steps.map(([title, description], index) => (
             <li
               key={title}
-              className="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.025] p-5"
+              className="flex gap-4 rounded-2xl border border-white/10 bg-white/2.5 p-5"
             >
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-lime-300/10 text-sm font-bold text-lime-300">
                 {index + 1}
@@ -195,7 +195,7 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-5 pb-20 sm:px-8 sm:pb-24">
-        <div className="flex flex-col items-start justify-between gap-6 rounded-3xl border border-lime-300/20 bg-gradient-to-br from-lime-300/10 to-white/[0.02] p-7 sm:flex-row sm:items-center sm:p-10">
+        <div className="flex flex-col items-start justify-between gap-6 rounded-3xl border border-lime-300/20 bg-linear-to-br from-lime-300/10 to-white/2 p-7 sm:flex-row sm:items-center sm:p-10">
           <div>
             <h2 className="text-2xl font-bold">
               Эхний хуудсаа орчуулахад бэлэн үү?
