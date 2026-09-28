@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
+import { safeNextPath } from "@/lib/safe-next";
 
-export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
+export default function AuthForm({ mode, next = "/workspace" }: { mode: "login" | "signup"; next?: string }) {
   const isSignup = mode === "signup";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,6 +19,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
     if (search.has("oauth_error")) {
       setError("Google-ээр нэвтрэхэд алдаа гарлаа. Дахин оролдоно уу.");
     }
+    if (search.has("setup")) setError("Supabase-ийн URL болон publishable key тохируулаад серверээ дахин асаана уу.");
     if (search.has("password_updated")) setMessage("Нууц үг шинэчлэгдлээ. Шинэ нууц үгээрээ нэвтэрнэ үү.");
   }, []);
 
@@ -30,9 +32,11 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
     setBusy(true);
     try {
       const supabase = createClient();
+      const redirectTo = new URL("/auth/callback", window.location.origin);
+      redirectTo.searchParams.set("next", safeNextPath(next));
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: { redirectTo: redirectTo.toString() },
       });
       if (authError) throw authError;
     } catch (cause) {
@@ -53,7 +57,13 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
     try {
       const supabase = createClient();
       if (isSignup) {
-        const { data, error: authError } = await supabase.auth.signUp({ email, password });
+        const emailRedirectTo = new URL("/auth/callback", window.location.origin);
+        emailRedirectTo.searchParams.set("next", safeNextPath(next));
+        const { data, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: emailRedirectTo.toString() },
+        });
         if (authError) throw authError;
         if (!data.session) {
           setMessage("Бүртгэл үүслээ. Имэйл хаягаа баталгаажуулаад нэвтэрнэ үү.");
@@ -63,7 +73,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
         const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
         if (authError) throw authError;
       }
-      window.location.assign("/");
+      window.location.assign(safeNextPath(next));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Нэвтрэх үед алдаа гарлаа.");
     } finally {
@@ -90,7 +100,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
           {message && <p role="status" className="text-sm text-lime-200">{message}</p>}
           <button disabled={busy} className="w-full rounded-xl bg-lime-300 px-4 py-3 font-semibold text-black disabled:opacity-60">{busy ? "Түр хүлээнэ үү…" : isSignup ? "Бүртгүүлэх" : "Нэвтрэх"}</button>
         </form>
-        <p className="mt-6 text-sm text-white/60">{isSignup ? "Бүртгэлтэй юу?" : "Бүртгэлгүй юу?"} <Link className="text-lime-300 underline" href={isSignup ? "/login" : "/signup"}>{isSignup ? "Нэвтрэх" : "Бүртгүүлэх"}</Link></p>
+        <p className="mt-6 text-sm text-white/60">{isSignup ? "Бүртгэлтэй юу?" : "Бүртгэлгүй юу?"} <Link className="text-lime-300 underline" href={`${isSignup ? "/login" : "/signup"}?next=${encodeURIComponent(safeNextPath(next))}`}>{isSignup ? "Нэвтрэх" : "Бүртгүүлэх"}</Link></p>
       </section>
     </main>
   );
