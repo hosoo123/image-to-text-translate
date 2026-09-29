@@ -137,7 +137,7 @@ async function requestOpenAiCompatible(
     model: getModel(provider),
     messages: [{ role: "user", content }],
     response_format: { type: "json_object" },
-    temperature: 0.2,
+    temperature: provider === "groq" ? 0.55 : 0.2,
     max_tokens: 6000,
   });
   const output = completion.choices[0]?.message.content;
