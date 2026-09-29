@@ -139,6 +139,9 @@ async function requestOpenAiCompatible(
     response_format: { type: "json_object" },
     temperature: provider === "groq" ? 0.55 : 0.2,
     max_tokens: 6000,
+    ...(provider === "groq" && /qwen3/i.test(getModel(provider))
+      ? { reasoning_effort: "none" as const }
+      : {}),
   });
   const output = completion.choices[0]?.message.content;
 
