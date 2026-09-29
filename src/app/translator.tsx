@@ -1245,7 +1245,7 @@ export default function Home() {
               >
                 {loading && <Spinner className="mr-2 inline-block align-middle text-black" />}
                 {loading
-                  ? "AI уншиж байна..."
+                  ? "Зөвхөн яриаг таньж байна..."
                   : isAnalyzed
                     ? "↻ Дахин AI-аар уншуулах"
                     : "✦ AI-аар уншуулж эхлэх"}
