@@ -353,7 +353,7 @@ export default function Home() {
           : "";
 
       if (!texts || !Array.isArray(texts) || texts.length === 0) {
-        setError("Зураг дээр текст олдсонгүй.");
+        setError("Ярианы текст илрээгүй. Ярианы bubble тод харагдсан зураг оруулж дахин оролдоно уу.");
 
         return;
       }
@@ -1245,7 +1245,7 @@ export default function Home() {
               >
                 {loading && <Spinner className="mr-2 inline-block align-middle text-black" />}
                 {loading
-                  ? "Зөвхөн яриаг таньж байна..."
+                  ? "Яриа, бодол, тайлбарыг таньж байна..."
                   : isAnalyzed
                     ? "↻ Дахин AI-аар уншуулах"
                     : "✦ AI-аар уншуулж эхлэх"}
