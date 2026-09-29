@@ -39,6 +39,13 @@ export async function POST(request: Request) {
       );
     }
 
+    const dialogueTexts = texts.filter(
+      (item) => typeof item.type === "string" && item.type.toLowerCase() === "dialogue",
+    );
+    if (dialogueTexts.length === 0) {
+      return Response.json({ translations: [] });
+    }
+
     let usage;
     try {
       usage = await consumeAiUsage("translate");
@@ -49,7 +56,7 @@ export async function POST(request: Request) {
       return Response.json({ error: `Өдрийн AI лимит (${usage.daily_limit}) дууссан байна.` }, { status: 429 });
     }
 
-    const inputText = texts
+    const inputText = dialogueTexts
       .map((item) => {
         return `
 ID: ${item.id}
@@ -526,7 +533,7 @@ ${inputText}
           id?: unknown;
           translation?: unknown;
         }>;
-        const expectedIds = new Set(texts.map((item) => item.id));
+        const expectedIds = new Set(dialogueTexts.map((item) => item.id));
         const valid = translations.every(
           (item) =>
             typeof item.id === "string" &&

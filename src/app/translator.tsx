@@ -1419,19 +1419,26 @@ export default function Home() {
 
                       {/* TRANSLATION */}
 
-                      <p className="mb-2 mt-5 text-xs font-bold uppercase tracking-[0.16em] text-lime-300/80">
-                        Монгол орчуулга
-                      </p>
-
-                      <textarea
-                        value={translation?.translation || ""}
-                        onChange={(event) =>
-                          updateTranslation(original.id, event.target.value)
-                        }
-                        rows={3}
-                        className="w-full resize-y rounded-2xl border border-white/15 bg-black/30 p-3 text-base leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-lime-300/70 focus:ring-4 focus:ring-lime-300/10 sm:p-4 sm:text-lg sm:leading-8"
-                        placeholder="Монгол орчуулга..."
-                      />
+                      {original.type.toLowerCase() === "dialogue" ? (
+                        <>
+                          <p className="mb-2 mt-5 text-xs font-bold uppercase tracking-[0.16em] text-lime-300/80">
+                            Монгол орчуулга
+                          </p>
+                          <textarea
+                            value={translation?.translation || ""}
+                            onChange={(event) =>
+                              updateTranslation(original.id, event.target.value)
+                            }
+                            rows={3}
+                            className="w-full resize-y rounded-2xl border border-white/15 bg-black/30 p-3 text-base leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-lime-300/70 focus:ring-4 focus:ring-lime-300/10 sm:p-4 sm:text-lg sm:leading-8"
+                            placeholder="Монгол орчуулга..."
+                          />
+                        </>
+                      ) : (
+                        <p className="mt-4 text-sm text-zinc-500">
+                          Ярианы бус текстийг орчуулахгүй.
+                        </p>
+                      )}
                     </div>
                   );
                 })}
