@@ -1,4 +1,5 @@
 import { createClient } from "./server";
+import { isAdminEmail } from "./admin";
 
 function dailyDefaultLimit() {
   const value = Number.parseInt(process.env.DAILY_AI_REQUEST_LIMIT ?? "20", 10);
@@ -7,6 +8,11 @@ function dailyDefaultLimit() {
 
 export async function consumeAiUsage(kind: "analyze" | "translate") {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (isAdminEmail(user?.email)) {
+    return { allowed: true, used: 0, daily_limit: Number.MAX_SAFE_INTEGER };
+  }
+
   const { data, error } = await supabase.rpc("consume_daily_ai_usage", {
     p_kind: kind,
     p_default_limit: dailyDefaultLimit(),

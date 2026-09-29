@@ -150,13 +150,14 @@ async function requestOpenAiCompatible(
 }
 
 async function requestGemini(prompt: string, image?: AiImage) {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKeys = [
+    ...(process.env.GEMINI_API_KEYS?.split(",") ?? []),
+    process.env.GEMINI_API_KEY ?? "",
+  ].map((key) => key.trim()).filter(Boolean);
 
-  if (!apiKey) {
+  if (apiKeys.length === 0) {
     throw new Error("GEMINI_API_KEY тохируулаагүй.");
   }
-
-  const ai = new GoogleGenAI({ apiKey });
   const input = [
     { type: "text" as const, text: prompt },
     ...(image
@@ -169,16 +170,35 @@ async function requestGemini(prompt: string, image?: AiImage) {
         ]
       : []),
   ];
-  const interaction = await ai.interactions.create({
-    model: getModel("gemini"),
-    input,
-  });
+  const uniqueKeys = [...new Set(apiKeys)];
+  for (let index = 0; index < uniqueKeys.length; index += 1) {
+    try {
+      const ai = new GoogleGenAI({ apiKey: uniqueKeys[index] });
+      const interaction = await ai.interactions.create({
+        model: getModel("gemini"),
+        input,
+      });
 
-  if (!interaction.output_text?.trim()) {
-    throw new Error("Gemini хоосон хариу буцаалаа.");
+      if (!interaction.output_text?.trim()) {
+        throw new Error("Gemini хоосон хариу буцаалаа.");
+      }
+
+      if (index > 0) console.info(`[ai] Gemini key ${index + 1} амжилттай.`);
+      return interaction.output_text;
+    } catch (error) {
+      const status = typeof error === "object" && error !== null && "status" in error
+        ? error.status
+        : undefined;
+      const message = error instanceof Error ? error.message : "";
+      const quotaExhausted = status === 429 ||
+        (status === 403 && /quota|rate.?limit|resource.?exhausted/i.test(message));
+
+      if (!quotaExhausted || index === uniqueKeys.length - 1) throw error;
+      console.warn(`[ai] Gemini key ${index + 1} quota-д хүрсэн, дараагийн key-г туршина.`);
+    }
   }
 
-  return interaction.output_text;
+  throw new Error("Gemini API key-үүд амжилтгүй боллоо.");
 }
 
 function getSafeFailureReason(error: unknown) {
