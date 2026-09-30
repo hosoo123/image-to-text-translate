@@ -931,49 +931,101 @@ export default function Home() {
       regionRight - regionLeft,
       regionBottom - regionTop,
     );
-    const regionWidth = region.width;
-    const pixelAt = (x: number, y: number) => {
-      const index = (y * regionWidth + x) * 4;
-      return [
-        region.data[index],
-        region.data[index + 1],
-        region.data[index + 2],
-        region.data[index + 3],
-      ];
-    };
+    const width = region.width;
+    const height = region.height;
+    const pixelCount = width * height;
+    const original = new Uint8ClampedArray(region.data);
+    const mask = new Uint8Array(pixelCount);
+    const luminance = new Float32Array(pixelCount);
+    const localLeft = left - regionLeft;
+    const localTop = top - regionTop;
+    const localRight = right - regionLeft;
+    const localBottom = bottom - regionTop;
+    const indexAt = (x: number, y: number) => y * width + x;
 
-    for (let y = top; y < bottom; y += 1) {
-      const localY = y - regionTop;
-      const verticalRatio = (y - top + 0.5) / Math.max(1, bottom - top);
-      const leftColor = pixelAt(Math.max(0, left - regionLeft - 1), localY);
-      const rightColor = pixelAt(
-        Math.min(regionWidth - 1, right - regionLeft),
-        localY,
-      );
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const index = indexAt(x, y) * 4;
+        luminance[indexAt(x, y)] =
+          original[index] * 0.299 +
+          original[index + 1] * 0.587 +
+          original[index + 2] * 0.114;
+      }
+    }
 
-      for (let x = left; x < right; x += 1) {
-        const localX = x - regionLeft;
-        const horizontalRatio = (x - left + 0.5) / Math.max(1, right - left);
-        const topColor = pixelAt(localX, Math.max(0, top - regionTop - 1));
-        const bottomColor = pixelAt(
-          localX,
-          Math.min(region.height - 1, bottom - regionTop),
-        );
-        const index = (localY * regionWidth + localX) * 4;
-
-        for (let channel = 0; channel < 4; channel += 1) {
-          const horizontal =
-            leftColor[channel] * (1 - horizontalRatio) +
-            rightColor[channel] * horizontalRatio;
-          const vertical =
-            topColor[channel] * (1 - verticalRatio) +
-            bottomColor[channel] * verticalRatio;
-
-          region.data[index + channel] = Math.round(
-            (horizontal + vertical) / 2,
-          );
+    // Build a mask from locally contrasting ink pixels, rather than replacing
+    // the entire OCR rectangle and leaving a flat patch over the artwork.
+    for (let y = localTop; y < localBottom; y += 1) {
+      for (let x = localLeft; x < localRight; x += 1) {
+        let sum = 0;
+        let count = 0;
+        for (let dy = -2; dy <= 2; dy += 1) {
+          for (let dx = -2; dx <= 2; dx += 1) {
+            if (dx === 0 && dy === 0) continue;
+            const sampleX = x + dx;
+            const sampleY = y + dy;
+            if (sampleX < 0 || sampleY < 0 || sampleX >= width || sampleY >= height) continue;
+            sum += luminance[indexAt(sampleX, sampleY)];
+            count += 1;
+          }
+        }
+        const index = indexAt(x, y);
+        if (count > 0 && Math.abs(luminance[index] - sum / count) > 38) {
+          mask[index] = 1;
         }
       }
+    }
+
+    // Include anti-aliased edges around detected strokes.
+    const expandedMask = new Uint8Array(mask);
+    for (let y = localTop; y < localBottom; y += 1) {
+      for (let x = localLeft; x < localRight; x += 1) {
+        if (!mask[indexAt(x, y)]) continue;
+        for (let dy = -1; dy <= 1; dy += 1) {
+          for (let dx = -1; dx <= 1; dx += 1) {
+            const targetX = x + dx;
+            const targetY = y + dy;
+            if (targetX >= localLeft && targetX < localRight && targetY >= localTop && targetY < localBottom) {
+              expandedMask[indexAt(targetX, targetY)] = 1;
+            }
+          }
+        }
+      }
+    }
+
+    // Diffuse neighboring artwork colors into only the masked lettering.
+    // This avoids the visible rectangular fill caused by whole-box blending.
+    const filled = new Uint8ClampedArray(original);
+    for (let iteration = 0; iteration < 64; iteration += 1) {
+      for (let y = localTop; y < localBottom; y += 1) {
+        for (let x = localLeft; x < localRight; x += 1) {
+          const pixelIndex = indexAt(x, y);
+          if (!expandedMask[pixelIndex]) continue;
+          const neighbors = [
+            [x - 1, y],
+            [x + 1, y],
+            [x, y - 1],
+            [x, y + 1],
+          ].filter(([nx, ny]) => nx >= 0 && ny >= 0 && nx < width && ny < height);
+          if (neighbors.length === 0) continue;
+
+          for (let channel = 0; channel < 3; channel += 1) {
+            const value = neighbors.reduce(
+              (total, [nx, ny]) => total + filled[(indexAt(nx, ny) * 4) + channel],
+              0,
+            ) / neighbors.length;
+            filled[pixelIndex * 4 + channel] = value;
+          }
+        }
+      }
+    }
+
+    for (let index = 0; index < pixelCount; index += 1) {
+      if (!expandedMask[index]) continue;
+      const offset = index * 4;
+      region.data[offset] = filled[offset];
+      region.data[offset + 1] = filled[offset + 1];
+      region.data[offset + 2] = filled[offset + 2];
     }
 
     ctx.putImageData(region, regionLeft, regionTop);
