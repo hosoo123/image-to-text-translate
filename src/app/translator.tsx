@@ -233,8 +233,24 @@ export default function Home() {
           handleSize,
           handleSize,
         );
+        const fontSize = Math.max(16, Math.round(img.naturalWidth / 35));
+        const badgePadding = Math.max(4, Math.round(fontSize * 0.22));
+        const drawBadge = (label: string, x: number, y: number, color: string) => {
+          ctx.font = `bold ${fontSize}px Arial`;
+          const badgeWidth = ctx.measureText(label).width + badgePadding * 2;
+          const badgeHeight = fontSize + badgePadding * 2;
+          const badgeX = Math.max(0, Math.min(x, img.naturalWidth - badgeWidth));
+          const badgeY = Math.max(0, y - badgeHeight);
+          ctx.fillStyle = color;
+          ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
+          ctx.fillStyle = "#ffffff";
+          ctx.textBaseline = "middle";
+          ctx.fillText(label, badgeX + badgePadding, badgeY + badgeHeight / 2);
+        };
+        drawBadge(`B${item.id}`, bounds.x, bounds.y, "#16a34a");
         ctx.restore();
 
+        ctx.save();
         ctx.strokeStyle = "#ef4444";
         ctx.lineWidth = Math.max(2, Math.round(img.naturalWidth / 600));
         ctx.strokeRect(item.x, item.y, item.width, item.height);
@@ -246,11 +262,8 @@ export default function Home() {
           textHandleSize,
           textHandleSize,
         );
-
-        const fontSize = Math.max(16, Math.round(img.naturalWidth / 35));
-        ctx.fillStyle = "#ef4444";
-        ctx.font = `bold ${fontSize}px Arial`;
-        ctx.fillText(item.id, item.x, Math.max(item.y - 8, fontSize));
+        drawBadge(`T${item.id}`, item.x, item.y, "#dc2626");
+        ctx.restore();
       });
     };
 
@@ -1218,8 +1231,9 @@ export default function Home() {
               />
               {analysisTexts.length > 0 && (
                 <div className="mx-auto mt-3 flex max-w-3xl flex-wrap gap-x-5 gap-y-2 px-1 text-xs text-zinc-400">
-                  <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-sm bg-green-500" />Ногоон: орчуулгын байрлал. Хүрээний дотор чирж хөдөлгө, буланг чирж хэмжээг өөрчил.</span>
-                  <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-sm bg-red-500" />Улаан: эх текстийн OCR хүрээ. Захыг чирж хөдөлгө, буланг чирж хэмжээг өөрчил.</span>
+                  <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-sm bg-green-500" />Ногоон B дугаар: тухайн текстийн орчуулгын bubble-ийн хүрээ.</span>
+                  <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-sm bg-red-500" />Улаан T дугаар: эх бичвэрийн OCR хүрээ. T, B-ийн дугаар ижил бол нэг мөр.</span>
+                  <span className="w-full text-zinc-500">Хүрээн дотор чирж хөдөлгөнө; булангийн бариулаар хэмжээг өөрчилнө. Жагсаалтын # дугаар нь T/B дугаартай таарна.</span>
                 </div>
               )}
             </div>

@@ -11,10 +11,11 @@ type AiImage = {
 type GenerateJsonOptions<T> = {
   prompt: string;
   image?: AiImage;
+  reasoningEffort?: "none" | "low";
   validate: (value: unknown) => T;
 };
 
-const DEFAULT_PROVIDERS: AiProvider[] = ["gemini", "groq", "openrouter"];
+const DEFAULT_PROVIDERS: AiProvider[] = ["gemini", "openrouter", "groq"];
 const SUPPORTED_PROVIDERS = new Set<AiProvider>([
   "gemini",
   "groq",
@@ -39,7 +40,14 @@ function getProviderOrder(): AiProvider[] {
     );
   }
 
-  return uniqueProviders as AiProvider[];
+  const configuredProviders = uniqueProviders as AiProvider[];
+  return [
+    ...(configuredProviders.includes("gemini") ? (["gemini"] as AiProvider[]) : []),
+    ...configuredProviders.filter(
+      (provider) => provider !== "gemini" && provider !== "groq",
+    ),
+    ...(configuredProviders.includes("groq") ? (["groq"] as AiProvider[]) : []),
+  ];
 }
 
 function parseJsonOutput(output: string): unknown {
@@ -100,6 +108,7 @@ async function requestOpenAiCompatible(
   provider: Exclude<AiProvider, "gemini">,
   prompt: string,
   image?: AiImage,
+  reasoningEffort?: "none" | "low",
 ) {
   const apiKey = getApiKey(provider);
 
@@ -140,7 +149,11 @@ async function requestOpenAiCompatible(
     temperature: provider === "groq" ? 0.55 : 0.2,
     max_tokens: 6000,
     ...(provider === "groq" && /qwen3/i.test(getModel(provider))
-      ? { reasoning_effort: "none" as const }
+      ? {
+          reasoning_effort: /qwen\/qwen3\.8/i.test(getModel(provider))
+            ? reasoningEffort ?? "none"
+            : "none",
+        }
       : {}),
   });
   const output = completion.choices[0]?.message.content;
@@ -193,11 +206,12 @@ async function requestGemini(prompt: string, image?: AiImage) {
         ? error.status
         : undefined;
       const message = error instanceof Error ? error.message : "";
-      const quotaExhausted = status === 429 ||
-        (status === 403 && /quota|rate.?limit|resource.?exhausted/i.test(message));
+      const keyUnavailable =
+        status === 400 || status === 401 || status === 403 || status === 429 ||
+        /api.?key|quota|rate.?limit|resource.?exhausted|permission.?denied/i.test(message);
 
-      if (!quotaExhausted || index === uniqueKeys.length - 1) throw error;
-      console.warn(`[ai] Gemini key ${index + 1} quota-д хүрсэн, дараагийн key-г туршина.`);
+      if (!keyUnavailable || index === uniqueKeys.length - 1) throw error;
+      console.warn(`[ai] Gemini key ${index + 1} боломжгүй (HTTP ${status ?? "?"}), дараагийн key-г туршина.`);
     }
   }
 
@@ -231,6 +245,7 @@ export async function generateJsonWithFallback<T>(
               provider,
               options.prompt,
               options.image,
+              options.reasoningEffort,
             );
       const result = options.validate(parseJsonOutput(output));
 
