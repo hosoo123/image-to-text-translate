@@ -29,6 +29,7 @@ type AnalysisText = {
   emotion?: string;
   relationship?: string;
   confidence?: number;
+  manuallyAdded?: boolean;
 };
 
 type Translation = {
@@ -68,6 +69,9 @@ export default function Home() {
   const [sceneContext, setSceneContext] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [retranslating, setRetranslating] = useState(false);
+  const [translationNeedsRefresh, setTranslationNeedsRefresh] = useState(false);
+  const [newDialogueDraft, setNewDialogueDraft] = useState("");
   const [rendering, setRendering] = useState(false);
   const [error, setError] = useState("");
   const [activeProvider, setActiveProvider] = useState("");
@@ -308,6 +312,8 @@ export default function Home() {
     setOriginalImage(imageUrl);
 
     setTranslations([]);
+    setTranslationNeedsRefresh(false);
+    setNewDialogueDraft("");
     setOriginalTexts([]);
     setAnalysisTexts([]);
     setSceneContext("");
@@ -326,6 +332,7 @@ export default function Home() {
     setError("");
 
     setTranslations([]);
+    setTranslationNeedsRefresh(false);
     setOriginalTexts([]);
     setAnalysisTexts([]);
     setSceneContext("");
@@ -399,6 +406,7 @@ export default function Home() {
       setActiveProvider(translateResponse.headers.get("X-AI-Provider") || "");
 
       setTranslations(translateData.translations || []);
+      setTranslationNeedsRefresh(false);
     } catch (error) {
       console.error(error);
 
@@ -428,6 +436,99 @@ export default function Home() {
     );
   }
 
+  function updateOriginalText(id: string, value: string) {
+    const updateItem = (item: AnalysisText) =>
+      item.id === id ? { ...item, originalText: value } : item;
+    setOriginalTexts((current) => current.map(updateItem));
+    setAnalysisTexts((current) => current.map(updateItem));
+    setTranslationNeedsRefresh(true);
+  }
+
+  function addMissingDialogue() {
+    const originalText = newDialogueDraft.trim();
+    const canvas = canvasRef.current;
+    if (!originalText) return;
+    if (!canvas || canvas.width < 1 || canvas.height < 1) {
+      setError("Зургийн хэмжээ олдсонгүй. Зургаа дахин ачаалж оролдоно уу.");
+      return;
+    }
+
+    const usedIds = new Set(originalTexts.map((item) => item.id));
+    let nextId = 1;
+    while (usedIds.has(String(nextId))) nextId += 1;
+    const x = Math.round(canvas.width * 0.3);
+    const y = Math.round(canvas.height * 0.4);
+    const width = Math.max(100, Math.round(canvas.width * 0.4));
+    const height = Math.max(48, Math.round(canvas.height * 0.08));
+    const newItem: AnalysisText = {
+      id: String(nextId),
+      type: "dialogue",
+      originalText,
+      x,
+      y,
+      width: Math.min(width, canvas.width - x),
+      height: Math.min(height, canvas.height - y),
+      sourceX: x,
+      sourceY: y,
+      sourceWidth: Math.min(width, canvas.width - x),
+      sourceHeight: Math.min(height, canvas.height - y),
+      bubbleX: x,
+      bubbleY: y,
+      bubbleWidth: Math.min(width, canvas.width - x),
+      bubbleHeight: Math.min(height, canvas.height - y),
+      bubbleShape: "rounded",
+      bubbleBackground: "solid",
+      confidence: 1,
+      manuallyAdded: true,
+      character: "unknown",
+      speechStyle: "unknown",
+      emotion: "neutral",
+      relationship: "unknown",
+    };
+
+    setOriginalTexts((current) => [...current, newItem]);
+    setAnalysisTexts((current) => [...current, newItem]);
+    setTranslations((current) => [...current, { id: newItem.id, translation: "" }]);
+    setNewDialogueDraft("");
+    setTranslationNeedsRefresh(true);
+    setError("");
+  }
+
+  function removeTextItem(id: string) {
+    setOriginalTexts((current) => current.filter((item) => item.id !== id));
+    setAnalysisTexts((current) => current.filter((item) => item.id !== id));
+    setTranslations((current) => current.filter((item) => item.id !== id));
+    setTranslationNeedsRefresh(true);
+  }
+
+  async function regenerateTranslations() {
+    if (!originalTexts.some((item) => item.type.toLowerCase() === "dialogue")) {
+      setError("Орчуулах dialogue алга байна.");
+      return;
+    }
+
+    setRetranslating(true);
+    setError("");
+    try {
+      const response = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texts: originalTexts, sceneContext }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Орчуулгыг шинэчилж чадсангүй.");
+      }
+      setTranslations(data.translations || []);
+      setTranslationNeedsRefresh(false);
+      setActiveProvider(response.headers.get("X-AI-Provider") || "");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Орчуулгыг шинэчилж чадсангүй.");
+    } finally {
+      setRetranslating(false);
+    }
+  }
+
   function updateBubbleBounds(id: string, bounds: BubbleBounds) {
     const updateItem = (item: AnalysisText) =>
       item.id === id
@@ -447,7 +548,21 @@ export default function Home() {
   function updateTextBounds(id: string, bounds: BubbleBounds) {
     const updateItem = (item: AnalysisText) =>
       item.id === id
-        ? { ...item, x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height }
+        ? {
+            ...item,
+            x: bounds.x,
+            y: bounds.y,
+            width: bounds.width,
+            height: bounds.height,
+            ...(item.manuallyAdded
+              ? {
+                  sourceX: bounds.x,
+                  sourceY: bounds.y,
+                  sourceWidth: bounds.width,
+                  sourceHeight: bounds.height,
+                }
+              : {}),
+          }
         : item;
 
     setOriginalTexts((current) => current.map(updateItem));
@@ -1130,6 +1245,8 @@ export default function Home() {
     setAnalysisTexts([]);
     setOriginalTexts([]);
     setTranslations([]);
+    setTranslationNeedsRefresh(false);
+    setNewDialogueDraft("");
 
     setSceneContext("");
     setActiveProvider("");
@@ -1297,6 +1414,37 @@ export default function Home() {
             </div>
           )}
 
+          {originalImage && !loading && (
+            <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+              <label htmlFor="add-dialogue" className="mb-2 block text-sm font-semibold text-zinc-200">
+                AI орхисон яриаг нэмэх
+              </label>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <input
+                  id="add-dialogue"
+                  value={newDialogueDraft}
+                  onChange={(event) => setNewDialogueDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") addMissingDialogue();
+                  }}
+                  placeholder="Зурган дээрх эх яриагаа бичнэ үү..."
+                  className="min-h-12 flex-1 rounded-xl border border-white/10 bg-black/30 px-4 text-sm text-white outline-none focus:border-lime-300/60"
+                />
+                <button
+                  type="button"
+                  onClick={addMissingDialogue}
+                  disabled={!newDialogueDraft.trim()}
+                  className="min-h-12 rounded-xl bg-white/10 px-5 text-sm font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  + Яриа нэмэх
+                </button>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-zinc-500">
+                Нэмсний дараа зураг дээрх улаан T хүрээг эх бичвэрт, ногоон B хүрээг bubble-д нь чирж тааруулна.
+              </p>
+            </div>
+          )}
+
           {/* OCR RESULTS */}
 
           {originalTexts.length > 0 && (
@@ -1319,6 +1467,22 @@ export default function Home() {
                 </span>
               </div>
 
+              <div className="mb-5 rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+                {translationNeedsRefresh && (
+                  <div className="mt-4 flex flex-col gap-3 rounded-xl border border-amber-300/20 bg-amber-300/[0.06] p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm text-amber-100/80">Эх текст өөрчлөгдсөн. Шинэ орчуулга гаргаарай.</p>
+                    <button
+                      type="button"
+                      onClick={regenerateTranslations}
+                      disabled={retranslating}
+                      className="min-h-10 rounded-lg bg-amber-200 px-4 text-sm font-bold text-black disabled:opacity-50"
+                    >
+                      {retranslating ? "Дахин орчуулж байна..." : "Зассан эхээр дахин орчуулах"}
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-4">
                 {originalTexts.map((original) => {
                   const translation = translations.find(
@@ -1335,9 +1499,19 @@ export default function Home() {
                           #{original.id}
                         </span>
 
-                        <span className="rounded-full bg-white/[0.06] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-                          {original.type}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-full bg-white/[0.06] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+                            {original.type}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeTextItem(original.id)}
+                            className="rounded-full px-3 py-1 text-xs text-zinc-500 transition hover:bg-red-400/10 hover:text-red-200"
+                            aria-label={`Текст ${original.id}-г хасах`}
+                          >
+                            Хасах
+                          </button>
+                        </div>
                       </div>
 
                       {/* CHARACTER INFO */}
@@ -1427,9 +1601,13 @@ export default function Home() {
                         Эх текст
                       </p>
 
-                      <div className="break-words rounded-2xl border border-white/5 bg-black/25 p-4 text-sm leading-7 text-zinc-300">
-                        {original.originalText}
-                      </div>
+                      <textarea
+                        value={original.originalText}
+                        onChange={(event) => updateOriginalText(original.id, event.target.value)}
+                        rows={2}
+                        aria-label={`${original.id}-р текстийн эх бичвэр`}
+                        className="w-full resize-y rounded-2xl border border-white/5 bg-black/25 p-4 text-sm leading-7 text-zinc-200 outline-none transition focus:border-lime-300/50"
+                      />
 
                       {/* TRANSLATION */}
 
