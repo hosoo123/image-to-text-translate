@@ -61,6 +61,7 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
 
   const [analysisTexts, setAnalysisTexts] = useState<AnalysisText[]>([]);
+  const [showBoxes, setShowBoxes] = useState(true);
 
   const [originalTexts, setOriginalTexts] = useState<AnalysisText[]>([]);
 
@@ -212,6 +213,9 @@ export default function Home() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0);
 
+      // Editor guides are only a screen overlay; never bake them into exports.
+      if (!showBoxes) return;
+
       analysisTexts.forEach((item) => {
         const bounds = getBubbleBounds(item, canvas.width, canvas.height);
         const shape = getBubbleShape(item);
@@ -284,7 +288,7 @@ export default function Home() {
       if (previewImageRef.current === img) drawPreview(img);
     };
     img.src = image;
-  }, [image, analysisTexts, getBubbleBounds, getBubbleShape, traceBubbleShape]);
+  }, [image, analysisTexts, showBoxes, getBubbleBounds, getBubbleShape, traceBubbleShape]);
 
   /*
    * Зураг сонгох
@@ -310,6 +314,7 @@ export default function Home() {
 
     setImage(imageUrl);
     setOriginalImage(imageUrl);
+    setShowBoxes(true);
 
     setTranslations([]);
     setTranslationNeedsRefresh(false);
@@ -331,6 +336,7 @@ export default function Home() {
     setLoading(true);
     setError("");
 
+    setShowBoxes(true);
     setTranslations([]);
     setTranslationNeedsRefresh(false);
     setOriginalTexts([]);
@@ -1044,7 +1050,8 @@ export default function Home() {
        */
       ctx.drawImage(img, 0, 0);
 
-      originalTexts.forEach((item) => {
+      const renderTexts = analysisTexts.length > 0 ? analysisTexts : originalTexts;
+      renderTexts.forEach((item) => {
         const translation = translations.find((t) => t.id === item.id);
 
         if (!translation) return;
@@ -1087,35 +1094,8 @@ export default function Home() {
         );
 
         if (hasFill) {
-          // Clear the source lettering at its OCR position, even when the
-          // green destination box has been moved elsewhere in the bubble.
-          ctx.fillStyle = backgroundColor;
-          const clearSourceText = (bounds: BubbleBounds) => {
-          const cleanupPadding = Math.max(
-            2,
-            Math.round(Math.min(bounds.width, bounds.height) * 0.035),
-          );
-            const left = Math.max(0, Math.floor(bounds.x - cleanupPadding));
-            const top = Math.max(0, Math.floor(bounds.y - cleanupPadding));
-            const right = Math.min(
-              canvas.width,
-              Math.ceil(bounds.x + bounds.width + cleanupPadding),
-            );
-            const bottom = Math.min(
-              canvas.height,
-              Math.ceil(bounds.y + bounds.height + cleanupPadding),
-            );
-            ctx.fillRect(left, top, right - left, bottom - top);
-          };
-          clearSourceText(sourceTextBounds);
-          if (
-            textBounds.x !== sourceTextBounds.x ||
-            textBounds.y !== sourceTextBounds.y ||
-            textBounds.width !== sourceTextBounds.width ||
-            textBounds.height !== sourceTextBounds.height
-          ) {
-            clearSourceText(textBounds);
-          }
+          // Fill the bubble itself. Rectangularly clearing OCR boxes can spill
+          // outside a rounded/elliptical bubble and leave visible white patches.
           ctx.fillStyle = backgroundColor;
           traceBubbleShape(ctx, bubbleBounds, shape);
           ctx.fill();
@@ -1189,13 +1169,7 @@ export default function Home() {
       const renderedImage = canvas.toDataURL("image/png", 1);
 
       setImage(renderedImage);
-
-      /*
-       * Bubble/text box-уудыг хадгална.
-       * Ингэснээр хэрэглэгч render хийсний дараа
-       * green box-ийг чирж дахин байрлуулж чадна.
-       */
-      setAnalysisTexts(originalTexts);
+      setShowBoxes(false);
     } catch (error) {
       console.error(error);
 
@@ -1332,19 +1306,28 @@ export default function Home() {
             <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0d0f14] p-1.5 sm:rounded-[2rem] sm:bg-black/25 sm:p-5 sm:shadow-2xl sm:shadow-black/30">
               <canvas
                 ref={canvasRef}
-                onPointerDown={handleBubblePointerDown}
-                onPointerMove={handleBubblePointerMove}
-                onPointerUp={handleBubblePointerUp}
-                onPointerCancel={handleBubblePointerUp}
-                title="Ногоон хүрээг дотроос нь чирж байрлуул; улаан хүрээг захнаас нь чирж OCR байрлалыг зас; булангийн бариулаар хэмжээг өөрчил"
-                className="mx-auto max-h-[52svh] max-w-full touch-none rounded-xl object-contain sm:max-h-[760px] sm:rounded-2xl"
+                onPointerDown={showBoxes ? handleBubblePointerDown : undefined}
+                onPointerMove={showBoxes ? handleBubblePointerMove : undefined}
+                onPointerUp={showBoxes ? handleBubblePointerUp : undefined}
+                onPointerCancel={showBoxes ? handleBubblePointerUp : undefined}
+                title={showBoxes ? "Ногоон хүрээг дотроос нь чирж байрлуул; улаан хүрээг захнаас нь чирж OCR байрлалыг зас; булангийн бариулаар хэмжээг өөрчил" : undefined}
+                className={`mx-auto max-h-[52svh] max-w-full rounded-xl object-contain sm:max-h-[760px] sm:rounded-2xl ${showBoxes ? "touch-none" : ""}`}
               />
-              {analysisTexts.length > 0 && (
+              {analysisTexts.length > 0 && showBoxes && (
                 <div className="mx-auto mt-2 flex max-w-3xl flex-wrap gap-x-4 gap-y-1 px-2 text-[11px] text-zinc-400 sm:mt-3 sm:gap-x-5 sm:gap-y-2 sm:px-1 sm:text-xs">
                   <span className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-green-500" />B · орчуулгын хүрээ</span>
                   <span className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-red-500" />T · эх текст</span>
                   <span className="w-full text-zinc-500">Ижил дугаар нь нэг мөр. Чирж байрлалыг тааруул.</span>
                 </div>
+              )}
+              {analysisTexts.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowBoxes((visible) => !visible)}
+                  className="mt-2 min-h-10 rounded-lg px-3 text-xs text-zinc-400 transition hover:bg-white/[0.06] hover:text-white"
+                >
+                  {showBoxes ? "Хүрээний тэмдэглэгээ нуух" : "Хүрээг засахаар харуулах"}
+                </button>
               )}
             </div>
           )}
