@@ -104,37 +104,39 @@ export default function AuthForm({
   }
 
   return (
-    <main className="flex min-h-svh items-start justify-center px-3 py-4 sm:items-center sm:px-5 sm:py-12">
-      <section className="w-full max-w-md rounded-2xl border border-white/10 bg-black/30 p-5 shadow-2xl backdrop-blur sm:rounded-3xl sm:p-8">
-        <Link href="/" className="inline-flex min-h-11 items-center text-sm text-lime-300">
+    <main className="relative flex min-h-svh items-start justify-center overflow-hidden px-0 py-0 sm:items-center sm:px-5 sm:py-12">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_at_top,rgba(190,242,100,0.10),transparent_68%)] sm:hidden" />
+      <section className="relative w-full max-w-md border-0 bg-transparent px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:rounded-3xl sm:border sm:border-white/10 sm:bg-black/30 sm:p-8 sm:shadow-2xl sm:backdrop-blur">
+        <Link href="/" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-lime-300">
+          <span className="grid h-8 w-8 place-items-center rounded-xl bg-lime-300 text-sm font-black text-zinc-950">M</span>
           Manhwa AI Translator
         </Link>
-        <h1 className="mt-4 text-2xl font-semibold sm:mt-6 sm:text-3xl">
+        <h1 className="mt-8 text-3xl font-bold tracking-tight sm:mt-6 sm:text-3xl">
           {isSignup ? "Бүртгүүлэх" : "Нэвтрэх"}
         </h1>
-        <p className="mt-2 text-sm text-white/60">
+        <p className="mt-2 max-w-sm text-sm leading-6 text-white/60">
           Зургаа AI-аар уншуулж, Монгол хэл рүү орчуулаарай.
         </p>
         <button
           type="button"
           disabled={busy}
           onClick={signInWithGoogle}
-          className="mt-6 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white px-4 py-3 font-medium text-zinc-900 disabled:opacity-60 sm:mt-8"
+          className="mt-7 flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl border border-white/15 bg-white px-4 py-3 font-semibold text-zinc-900 disabled:opacity-60 sm:mt-8 sm:min-h-12 sm:rounded-xl"
         >
           {busy ? <Spinner className="text-zinc-600" /> : <span aria-hidden="true" className="text-lg font-bold">G</span>}
           {busy ? "Google-той холбож байна…" : `Google-ээр ${isSignup ? "бүртгүүлэх" : "нэвтрэх"}`}
         </button>
-        <div className="my-5 flex items-center gap-3 text-xs text-white/40">
+        <div className="my-6 flex items-center gap-3 text-xs text-white/40 sm:my-5">
           <span className="h-px flex-1 bg-white/10" />
           эсвэл
           <span className="h-px flex-1 bg-white/10" />
         </div>
-        <div className="grid grid-cols-2 rounded-xl border border-white/10 bg-black/20 p-1">
+        <div className="grid grid-cols-2 rounded-2xl border border-white/10 bg-black/30 p-1 sm:rounded-xl">
           <button
             type="button"
             aria-pressed={authMethod === "email"}
             onClick={() => { setAuthMethod("email"); setError(""); setMessage(""); }}
-            className={`rounded-lg px-3 py-2.5 text-sm font-medium transition ${authMethod === "email" ? "bg-white/10 text-white shadow-sm" : "text-white/50 hover:text-white/80"}`}
+            className={`min-h-11 rounded-xl px-3 py-2.5 text-sm font-medium transition ${authMethod === "email" ? "bg-white/10 text-white shadow-sm" : "text-white/50 hover:text-white/80"}`}
           >
             Имэйлээр
           </button>
@@ -142,7 +144,7 @@ export default function AuthForm({
             type="button"
             aria-pressed={authMethod === "phone"}
             onClick={() => { setAuthMethod("phone"); setError(""); setMessage(""); }}
-            className={`rounded-lg px-3 py-2.5 text-sm font-medium transition ${authMethod === "phone" ? "bg-white/10 text-white shadow-sm" : "text-white/50 hover:text-white/80"}`}
+            className={`min-h-11 rounded-xl px-3 py-2.5 text-sm font-medium transition ${authMethod === "phone" ? "bg-white/10 text-white shadow-sm" : "text-white/50 hover:text-white/80"}`}
           >
             Утсаар
           </button>
@@ -158,7 +160,7 @@ export default function AuthForm({
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 outline-none focus:border-lime-300"
+              className="mt-2 min-h-14 w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-base outline-none focus:border-lime-300 sm:min-h-12 sm:rounded-xl"
             />
           </label>
           <label className="block text-sm">
@@ -170,7 +172,7 @@ export default function AuthForm({
               autoComplete={isSignup ? "new-password" : "current-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 outline-none focus:border-lime-300"
+              className="mt-2 min-h-14 w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-base outline-none focus:border-lime-300 sm:min-h-12 sm:rounded-xl"
             />
           </label>
           {!isSignup && (
@@ -186,7 +188,7 @@ export default function AuthForm({
           <button
             type="submit"
             disabled={busy}
-            className="w-full rounded-xl bg-lime-300 px-4 py-3 font-semibold text-black disabled:opacity-60"
+            className="min-h-14 w-full rounded-2xl bg-lime-300 px-4 py-3 font-semibold text-black disabled:opacity-60 sm:min-h-12 sm:rounded-xl"
           >
             {busy && <Spinner />}{busy ? "Түр хүлээнэ үү…" : isSignup ? "Бүртгүүлэх" : "Нэвтрэх"}
           </button>

@@ -1059,12 +1059,6 @@ export default function Home() {
         const background = item.bubbleBackground ?? "solid";
         const hasFill = background === "solid" && shape !== "none";
         const bubbleBounds = getBubbleBounds(item, canvas.width, canvas.height);
-        const {
-          x: bubbleX,
-          y: bubbleY,
-          width: bubbleWidth,
-          height: bubbleHeight,
-        } = bubbleBounds;
         const textBounds = {
           x: item.x,
           y: item.y,
@@ -1259,35 +1253,34 @@ export default function Home() {
 
   return (
     <main className="min-h-svh text-white">
-      <div className="mx-auto flex min-h-svh w-full max-w-6xl flex-col px-3 py-4 sm:px-8 sm:py-10">
-        <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-5 sm:mb-8 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-7">
+      <div className="mx-auto flex min-h-svh w-full max-w-6xl flex-col px-3 pb-28 pt-3 sm:px-8 sm:py-10 sm:pb-10">
+        <header className="mb-5 flex flex-col gap-3 border-b border-white/10 pb-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-7">
           <div>
-            <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-lime-300 sm:mb-4 sm:gap-3 sm:text-xs sm:tracking-[0.22em]">
-              <span className="h-2 w-2 rounded-full bg-lime-300 shadow-[0_0_18px_rgba(215,255,101,0.9)]" />
+            <div className="mb-1 flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.16em] text-lime-300 sm:mb-4 sm:gap-3 sm:text-xs sm:tracking-[0.22em]">
+              <span className="h-1.5 w-1.5 rounded-full bg-lime-300 shadow-[0_0_18px_rgba(215,255,101,0.9)] sm:h-2 sm:w-2" />
               Panel to page
             </div>
-            <h1 className="max-w-2xl text-3xl font-black tracking-[-0.04em] text-white min-[380px]:text-4xl sm:text-6xl">
-              Manhwa AI
-              <span className="block text-zinc-500">Translator.</span>
+            <h1 className="max-w-2xl text-2xl font-black tracking-[-0.04em] text-white min-[380px]:text-3xl sm:text-6xl">
+              Manhwa AI <span className="text-zinc-500 sm:block">Translator.</span>
             </h1>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400 sm:mt-4 sm:text-base">
+            <p className="mt-3 hidden max-w-xl text-sm leading-6 text-zinc-400 sm:mt-4 sm:block sm:text-base">
               Манхвагийн dialogue-г уншаад, дүрийн өнгө аясыг хадгалсан Монгол
               орчуулгыг bubble дээр нь буцааж байрлуулна.
             </p>
           </div>
 
-          <div className="flex w-full flex-wrap items-center justify-between gap-2 self-start sm:w-auto sm:justify-start sm:gap-3 sm:self-auto">
-            <div className="flex min-h-10 items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-zinc-400">
+          <div className="flex w-full items-center justify-between gap-2 self-start sm:w-auto sm:justify-start sm:gap-3 sm:self-auto">
+            <div className="flex min-h-9 items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] text-zinc-400 sm:min-h-10 sm:text-xs">
               <span
                 className={`h-2 w-2 rounded-full ${isAnalyzed ? "bg-lime-300" : "bg-zinc-600"}`}
               />
               {activeProvider ? `${activeProvider} provider` : "AI ready"}
             </div>
-            <a href="/account" className="inline-flex min-h-10 items-center rounded-full border border-white/10 px-3 py-2 text-xs text-zinc-300 hover:bg-white/10">Бүртгэл</a>
+            <a href="/account" className="inline-flex min-h-9 items-center rounded-full border border-white/10 px-3 py-2 text-xs text-zinc-300 hover:bg-white/10 sm:min-h-10">Бүртгэл</a>
           </div>
         </header>
 
-        <div className="mb-5 grid grid-cols-3 gap-1 sm:mb-7 sm:max-w-xl sm:gap-2">
+        <div className="mb-4 grid grid-cols-3 gap-1 sm:mb-7 sm:max-w-xl sm:gap-2">
           {["Зураг", "Унших", "Татах"].map((step, index) => {
             const complete =
               index === 0
@@ -1298,7 +1291,7 @@ export default function Home() {
             return (
               <div
                 key={step}
-                className="flex min-w-0 items-center gap-1 text-[10px] text-zinc-500 sm:gap-2 sm:text-xs"
+                className="flex min-w-0 items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.025] px-2 py-2 text-[10px] text-zinc-500 sm:gap-2 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:text-xs"
               >
                 <span
                   className={`flex h-7 w-7 items-center justify-center rounded-full border text-[11px] font-bold ${complete ? "border-lime-300 bg-lime-300 text-black" : "border-white/15 bg-white/[0.04]"}`}
@@ -1317,7 +1310,7 @@ export default function Home() {
           {!image ? (
             <label
               htmlFor="image-upload"
-              className="group relative flex min-h-[250px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border border-dashed border-white/15 bg-white/[0.045] p-5 text-center shadow-2xl shadow-black/20 transition hover:border-lime-300/60 hover:bg-white/[0.07] sm:min-h-[380px] sm:rounded-[2rem] sm:p-8"
+              className="group relative flex min-h-[225px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border border-dashed border-lime-300/30 bg-[#11141a]/85 p-5 text-center transition hover:border-lime-300/60 hover:bg-white/[0.07] active:scale-[0.99] sm:min-h-[380px] sm:rounded-[2rem] sm:border-white/15 sm:bg-white/[0.045] sm:p-8 sm:shadow-2xl sm:shadow-black/20"
             >
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-lime-300/30 bg-lime-300/10 text-3xl transition group-hover:scale-105 sm:mb-6 sm:h-20 sm:w-20 sm:rounded-3xl sm:text-4xl">
                 ✦
@@ -1331,12 +1324,12 @@ export default function Home() {
                 JPG, PNG, WEBP · 20MB хүртэл. Нэг panel upload хийгээд AI-гаар
                 уншуулна.
               </p>
-              <span className="mt-7 rounded-full bg-lime-300 px-5 py-2.5 text-sm font-bold text-black">
-                Choose image
+              <span className="mt-6 rounded-xl bg-lime-300 px-6 py-3 text-sm font-bold text-black sm:mt-7 sm:rounded-full sm:py-2.5">
+                Зураг сонгох
               </span>
             </label>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/25 p-2 shadow-2xl shadow-black/30 sm:rounded-[2rem] sm:p-5">
+            <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0d0f14] p-1.5 sm:rounded-[2rem] sm:bg-black/25 sm:p-5 sm:shadow-2xl sm:shadow-black/30">
               <canvas
                 ref={canvasRef}
                 onPointerDown={handleBubblePointerDown}
@@ -1344,13 +1337,13 @@ export default function Home() {
                 onPointerUp={handleBubblePointerUp}
                 onPointerCancel={handleBubblePointerUp}
                 title="Ногоон хүрээг дотроос нь чирж байрлуул; улаан хүрээг захнаас нь чирж OCR байрлалыг зас; булангийн бариулаар хэмжээг өөрчил"
-                className="mx-auto max-h-[58svh] max-w-full touch-none rounded-lg object-contain sm:max-h-[760px] sm:rounded-2xl"
+                className="mx-auto max-h-[52svh] max-w-full touch-none rounded-xl object-contain sm:max-h-[760px] sm:rounded-2xl"
               />
               {analysisTexts.length > 0 && (
-                <div className="mx-auto mt-3 flex max-w-3xl flex-wrap gap-x-5 gap-y-2 px-1 text-xs text-zinc-400">
-                  <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-sm bg-green-500" />Ногоон B дугаар: тухайн текстийн орчуулгын bubble-ийн хүрээ.</span>
-                  <span className="inline-flex items-center gap-2"><i className="h-2.5 w-2.5 rounded-sm bg-red-500" />Улаан T дугаар: эх бичвэрийн OCR хүрээ. T, B-ийн дугаар ижил бол нэг мөр.</span>
-                  <span className="w-full text-zinc-500">Хүрээн дотор чирж хөдөлгөнө; булангийн бариулаар хэмжээг өөрчилнө. Жагсаалтын # дугаар нь T/B дугаартай таарна.</span>
+                <div className="mx-auto mt-2 flex max-w-3xl flex-wrap gap-x-4 gap-y-1 px-2 text-[11px] text-zinc-400 sm:mt-3 sm:gap-x-5 sm:gap-y-2 sm:px-1 sm:text-xs">
+                  <span className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-green-500" />B · орчуулгын хүрээ</span>
+                  <span className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-red-500" />T · эх текст</span>
+                  <span className="w-full text-zinc-500">Ижил дугаар нь нэг мөр. Чирж байрлалыг тааруул.</span>
                 </div>
               )}
             </div>
@@ -1367,12 +1360,12 @@ export default function Home() {
           {/* BUTTONS */}
 
           {image && (
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <div className="sticky bottom-0 z-20 -mx-3 mt-4 flex flex-col gap-2 border-t border-white/10 bg-[#090b10]/95 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur-xl sm:static sm:mx-0 sm:mt-5 sm:flex-row sm:gap-3 sm:border-0 sm:bg-transparent sm:p-0">
               <button
                 type="button"
                 onClick={analyzeImage}
                 disabled={loading}
-                className="flex-1 rounded-2xl bg-lime-300 px-6 py-3.5 font-bold text-black shadow-[0_12px_30px_rgba(215,255,101,0.12)] transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-12 flex-1 rounded-xl bg-lime-300 px-5 py-3 font-bold text-black transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-50 sm:rounded-2xl sm:py-3.5 sm:shadow-[0_12px_30px_rgba(215,255,101,0.12)]"
               >
                 {loading && <Spinner className="mr-2 inline-block align-middle text-black" />}
                 {loading
@@ -1384,7 +1377,7 @@ export default function Home() {
 
               <label
                 htmlFor="image-upload"
-                className="cursor-pointer rounded-2xl border border-white/10 bg-white/[0.05] px-6 py-3.5 text-center font-bold text-zinc-200 transition hover:bg-white/[0.1]"
+                className="min-h-11 cursor-pointer rounded-xl border border-white/10 bg-white/[0.05] px-6 py-3 text-center text-sm font-semibold text-zinc-200 transition hover:bg-white/[0.1] sm:rounded-2xl sm:py-3.5 sm:font-bold"
               >
                 Өөр зураг сонгох
               </label>
@@ -1403,12 +1396,11 @@ export default function Home() {
           {/* SCENE CONTEXT */}
 
           {sceneContext && (
-            <div className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-4 sm:p-6">
-              <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-lime-300">
-                Scene note
+            <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.035] p-4 sm:mt-8 sm:rounded-[1.75rem] sm:bg-white/[0.045] sm:p-6">
+              <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-lime-300 sm:mb-3">
+                Scene-ийн тайлбар
               </p>
-
-              <p className="max-w-3xl text-sm leading-7 text-zinc-300">
+              <p className="max-w-3xl text-sm leading-6 text-zinc-300 sm:leading-7">
                 {sceneContext}
               </p>
             </div>
@@ -1448,7 +1440,7 @@ export default function Home() {
           {/* OCR RESULTS */}
 
           {originalTexts.length > 0 && (
-            <div className="mt-12">
+            <div className="mt-8 sm:mt-12">
               <div className="mb-6 flex flex-col gap-3 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-lime-300">
@@ -1516,10 +1508,22 @@ export default function Home() {
 
                       {/* CHARACTER INFO */}
 
+                      {(original.character || original.emotion || original.relationship || original.speechStyle) && (
+                        <details className="mb-4 rounded-xl border border-white/[0.07] bg-black/20 p-3 sm:hidden">
+                          <summary className="cursor-pointer text-xs font-semibold text-zinc-400">Дүрийн өнгө аяс харах</summary>
+                          <div className="mt-3 flex flex-wrap gap-2 text-xs text-zinc-300">
+                            {original.character && original.character !== "unknown" && <span className="rounded-lg bg-white/[0.06] px-2.5 py-1.5">{original.character}</span>}
+                            {original.emotion && <span className="rounded-lg bg-white/[0.06] px-2.5 py-1.5">{original.emotion}</span>}
+                            {original.speechStyle && original.speechStyle !== "unknown" && <span className="rounded-lg bg-white/[0.06] px-2.5 py-1.5">{original.speechStyle}</span>}
+                            {original.relationship && original.relationship !== "unknown" && <span className="rounded-lg bg-white/[0.06] px-2.5 py-1.5">{original.relationship}</span>}
+                          </div>
+                        </details>
+                      )}
+
                       {(original.character ||
                         original.emotion ||
                         original.relationship) && (
-                        <div className="mb-5 grid gap-2 sm:grid-cols-2">
+                        <div className="mb-5 hidden gap-2 sm:grid sm:grid-cols-2">
                           {original.character &&
                             original.character !== "unknown" && (
                               <div className="break-words rounded-lg bg-zinc-950 px-3 py-2">
@@ -1577,7 +1581,7 @@ export default function Home() {
 
                       {original.personality &&
                         original.personality.length > 0 && (
-                          <div className="mb-5">
+                          <div className="mb-5 hidden sm:block">
                             <span className="text-xs text-zinc-600">
                               Personality
                             </span>
