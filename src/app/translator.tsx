@@ -1303,6 +1303,7 @@ export default function Home() {
               {activeProvider ? `${activeProvider} provider` : "AI ready"}
             </div>
             <a href="/account" className="inline-flex min-h-9 items-center rounded-full border border-white/10 px-3 py-2 text-xs text-zinc-300 hover:bg-white/10 sm:min-h-10">Бүртгэл</a>
+            <a href="/chapter" className="inline-flex min-h-9 items-center rounded-full border border-lime-300/20 px-3 py-2 text-xs text-lime-200 hover:bg-lime-300/10 sm:min-h-10">Бүлгээр</a>
           </div>
         </header>
 
